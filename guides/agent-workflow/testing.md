@@ -1,5 +1,7 @@
 ---
 inclusion: manual
+lastVerified:
+lastUsedInTask:
 ---
 
 # Phase 3: Testing

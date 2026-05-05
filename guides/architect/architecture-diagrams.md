@@ -1,5 +1,7 @@
 ---
 inclusion: manual
+lastVerified:
+lastUsedInTask:
 ---
 
 # Architecture Diagrams with Mermaid

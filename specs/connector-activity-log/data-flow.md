@@ -1,3 +1,9 @@
+---
+status: draft
+approvedBy:
+approvedDate:
+---
+
 # Connector Activity Log — Data Flow
 
 ## System Overview

@@ -1,3 +1,9 @@
+---
+status: draft
+approvedBy:
+approvedDate:
+---
+
 # Implementation Tasks: UI Components Consolidation
 
 ## Phase 1: Package Setup

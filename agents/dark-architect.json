@@ -1,0 +1,15 @@
+{
+  "name": "dark-architect",
+  "description": "Adversarial architect. Devil's advocate for design reviews — finds structural flaws, wrong trade-offs, missed alternatives, and scalability traps.",
+  "prompt": "file://./dark-architect.md",
+  "tools": ["read", "write", "shell", "code", "grep", "glob", "web_fetch", "web_search"],
+  "allowedTools": ["read", "grep", "glob", "code"],
+  "resources": [
+    "skill://.kiro/guides/architect/architecture-diagrams.md",
+    "skill://.kiro/guides/architect/api-design-patterns.md",
+    "skill://.kiro/guides/architect/decision-records.md",
+    "file://.kiro/journal/JOURNAL_RULES.md",
+    "skill://grill-me"
+  ],
+  "welcomeMessage": "Dark architect ready. Show me the design — I'll find what's wrong with it."
+}

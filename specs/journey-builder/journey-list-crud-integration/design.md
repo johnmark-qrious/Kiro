@@ -1,3 +1,9 @@
+---
+status: draft
+approvedBy:
+approvedDate:
+---
+
 # Design Document: Journey List CRUD Integration
 
 ## Overview

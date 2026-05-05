@@ -1,3 +1,10 @@
+---
+sync: draft
+notionPageId:
+lastLocalEdit:
+lastPublished:
+---
+
 # Notion Sub-PR Status — Update Existing Blocks, Don't Append
 
 When updating the Sub-PR Status table on a Notion Feature_Page, you MUST update the existing table block's rows — not append a new table below the existing one.

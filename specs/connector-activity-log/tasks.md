@@ -1,3 +1,9 @@
+---
+status: draft
+approvedBy:
+approvedDate:
+---
+
 # Implementation Tasks
 
 ## PR 1: Proto Package Upgrade and gRPC Client Setup

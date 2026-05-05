@@ -2,8 +2,23 @@
   "name": "frontend",
   "description": "TypeScript/Next.js/React expert. Clean, functional, self-documenting code. Use for features, refactoring, and code reviews.",
   "prompt": "file://./frontend.md",
-  "tools": ["read", "write", "shell", "code", "grep", "glob", "web_fetch", "web_search"],
-  "allowedTools": ["read", "grep", "glob", "code"],
+  "tools": [
+    "read",
+    "write",
+    "shell",
+    "code",
+    "grep",
+    "glob",
+    "web_fetch",
+    "web_search",
+    "subagent"
+  ],
+  "allowedTools": [
+    "read",
+    "grep",
+    "glob",
+    "code"
+  ],
   "resources": [
     "skill://.kiro/guides/frontend/typescript-best-practices.md",
     "skill://.kiro/guides/frontend/react-patterns.md",

@@ -1,3 +1,8 @@
+---
+lastVerified:
+lastUsedInTask:
+---
+
 # Code Review Checklist
 
 ## File Structure & Import Ordering

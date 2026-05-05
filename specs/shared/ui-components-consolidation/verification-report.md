@@ -1,3 +1,9 @@
+---
+status: draft
+approvedBy:
+approvedDate:
+---
+
 # Component Consolidation Verification Report
 
 **Date:** 2025-01-23

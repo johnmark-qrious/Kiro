@@ -1,3 +1,7 @@
+---
+inclusion: manual
+---
+
 # Session Continuity
 
 ## On Session Start

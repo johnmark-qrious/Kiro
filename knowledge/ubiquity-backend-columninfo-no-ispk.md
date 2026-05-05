@@ -1,3 +1,10 @@
+---
+sync: draft
+notionPageId:
+lastLocalEdit:
+lastPublished:
+---
+
 # ColumnInfo — No IsPK Property in MVC Layer
 
 `ColumnInfo` (`list/common/Info/Schema/ColumnInfo.cs`) inherits from `BaseDataColumn` which has no `IsPK` property.

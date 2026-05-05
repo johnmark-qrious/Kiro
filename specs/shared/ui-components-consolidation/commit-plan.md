@@ -1,3 +1,9 @@
+---
+status: draft
+approvedBy:
+approvedDate:
+---
+
 # UI Components Consolidation - Commit Plan
 
 **Work Item**: #3452758  

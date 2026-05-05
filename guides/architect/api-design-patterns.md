@@ -1,5 +1,7 @@
 ---
 inclusion: manual
+lastVerified:
+lastUsedInTask:
 ---
 
 # API Design Patterns

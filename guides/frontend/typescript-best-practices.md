@@ -1,5 +1,7 @@
 ---
 inclusion: manual
+lastVerified:
+lastUsedInTask:
 ---
 
 # TypeScript Best Practices

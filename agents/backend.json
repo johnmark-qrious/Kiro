@@ -1,28 +1,29 @@
 {
-    "name": "backend",
-    "description": "C#/.NET 8 backend expert. Legacy and modern .NET services, gRPC, NUnit testing, XML config. Use for backend features, bugfixes, and code reviews in QT-Ubi-UbiquityBackend.",
-    "prompt": "file://./backend.md",
-    "tools": [
-        "read",
-        "write",
-        "shell",
-        "code",
-        "grep",
-        "glob",
-        "web_fetch",
-        "web_search"
-    ],
-    "allowedTools": [
-        "read",
-        "grep",
-        "glob",
-        "code"
-    ],
-    "resources": [
-        "skill://.kiro/guides/backend/csharp-conventions.md",
-        "skill://.kiro/guides/backend/solution-structure.md",
-        "skill://.kiro/guides/backend/solid-principles.md"
-    ],
-    "keyboardShortcut": "ctrl+b",
-    "welcomeMessage": "Backend agent ready. What C#/.NET work needs doing?"
+  "name": "backend",
+  "description": "C#/.NET 8 backend expert. Legacy and modern .NET services, gRPC, NUnit testing, XML config. Use for backend features, bugfixes, and code reviews in QT-Ubi-UbiquityBackend.",
+  "prompt": "file://./backend.md",
+  "tools": [
+    "read",
+    "write",
+    "shell",
+    "code",
+    "grep",
+    "glob",
+    "web_fetch",
+    "web_search",
+    "subagent"
+  ],
+  "allowedTools": [
+    "read",
+    "grep",
+    "glob",
+    "code"
+  ],
+  "resources": [
+    "skill://.kiro/guides/backend/csharp-conventions.md",
+    "skill://.kiro/guides/backend/solution-structure.md",
+    "skill://.kiro/guides/backend/solid-principles.md"
+  ],
+  "keyboardShortcut": "ctrl+b",
+  "welcomeMessage": "Backend agent ready. What C#/.NET work needs doing?"
 }

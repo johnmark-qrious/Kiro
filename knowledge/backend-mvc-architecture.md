@@ -1,3 +1,10 @@
+---
+sync: draft
+notionPageId:
+lastLocalEdit:
+lastPublished:
+---
+
 # QT-Ubi-UbiquityBackend — MVC Project Architecture
 
 ## Overview

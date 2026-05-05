@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "Run Backend",
+  "description": "Starts Docker Desktop, SQL Server, Caddy, and Aspire backend services following the run-backend steering guide",
+  "version": "1",
+  "when": {
+    "type": "userTriggered"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Follow the .kiro/steering/run-backend.md steering file to start all backend services. Execute each step in order: check Docker Desktop, start SQL Server container if needed, start Caddy if needed, then start Aspire with `dotnet run mvc react apiv2` from local/AppHost as a background process. Report progress at each step."
+  }
+}

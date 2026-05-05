@@ -1,3 +1,8 @@
+---
+lastVerified:
+lastUsedInTask:
+---
+
 # Design Review Checklist
 
 ## Problem Definition

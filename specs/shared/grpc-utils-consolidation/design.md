@@ -1,3 +1,9 @@
+---
+status: draft
+approvedBy:
+approvedDate:
+---
+
 # Design Document: gRPC Utils Consolidation
 
 ## Overview

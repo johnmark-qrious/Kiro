@@ -1,3 +1,9 @@
+---
+status: draft
+approvedBy:
+approvedDate:
+---
+
 # Design Document: Standardize Error Handling
 
 ## Overview

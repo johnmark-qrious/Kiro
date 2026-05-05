@@ -1,3 +1,9 @@
+---
+status: draft
+approvedBy:
+approvedDate:
+---
+
 # Implementation Plan: Migrate Database gRPC Protos
 
 ## Overview

@@ -1,10 +1,24 @@
-﻿---
+---
 inclusion: manual
+lastVerified:
+lastUsedInTask:
 ---
 
 # Phase 2: Frontend Implementation
 
 When writing frontend code:
+
+## Step 0: Knowledge Lookup
+Before writing code, scan `.kiro/knowledge/README.md` index for entries matching these tags:
+`Ubiquity-WebApps`, `frontend`, `nextjs`, `react`, `jquery`, `aspx`, `dialog`, `xss`
+
+Read any matching entries. They contain gotchas and non-obvious behavior that will affect your implementation.
+
+## Figma Link Detection
+If the ticket contains a Figma link (figma.com URL), do NOT silently ignore it. Alert the user:
+> "Figma link detected in ticket. Figma MCP is currently disabled. Enable it if you want me to follow the design, or paste key specs (colors, spacing, breakpoints) here."
+
+Wait for the user's response before proceeding with implementation.
 
 ## Step 1: Implementation
 Use **@frontend** for code writing
@@ -19,6 +33,7 @@ Always let **@quality-assurance** check the code.
 
 **Handoff context**: Include a 1-2 sentence summary of what @frontend did and which files were created/modified. This avoids the reviewer re-discovering everything from scratch.
 
+- Re-read any knowledge entries found in Step 0 — review the code specifically for those known gotchas
 - Review for bugs and edge cases
 - Check error handling
 - Validate assumptions
@@ -47,14 +62,18 @@ User: "Implement the journey list page"
 
 ## MVC / Legacy jQuery (QT-Ubi-UbiquityBackend)
 
-When working on the MVC frontend (`.aspx`, `.ascx`, `Util.js`, `Lists*.js`):
+When working on `.aspx`, `.ascx`, `Util.js`, `Lists*.js`, or any JS in the `mvc/` folder:
 
-- **Never build HTML from server JSON via string concatenation + `.html()`**  this is XSS. Use DOM construction with `<element>.text(value)` and `document.createTextNode()` instead. The existing codebase uses `.text()` for user-supplied values (e.g., delete/archive dialogs).
-- **`Util.showDialog` uses `keypress` for Escape**  `keypress` doesn't fire for non-printable keys in modern browsers. Any dialog needing custom Escape handling must use `keydown` with a namespace (e.g., `keydown.myDialog`) bound *after* `Util.showDialog()`.
-- **`<a>` tags with `addClass("disabled")` are only visual**  click events still fire. Always add `if (}(this).hasClass("disabled")) return;` as the first line of click handlers on `<a>` buttons.
-- **No JS test infrastructure**  the MVC project has no test runner. QA review is the primary quality gate for JS changes.
+**Read**: `.kiro/guides/frontend/mvc-legacy.md` before writing any code.
+
+This is jQuery/DOM manipulation, not React. Different rules apply.
 
 ## Next Step: Testing
 
 If the change includes new business logic, user flows, or error handling paths, suggest running the testing workflow next. Don't force it  just nudge:
-> "This added new logic in X. Want to run the testing workflow to cover it?"
+> "This added new logic in X. Want to run the testing workflow to cover it?"
+## Learned Patterns
+<!-- cap: 10 | last-consolidated: never | pr-count-since: 0 -->
+
+- Check existing test files for the test framework before writing tests  this monorepo uses bun:test, not vitest (1x)
+- Always diff package.json against origin/main before committing  feature branches accumulate stale devDependencies (1x)

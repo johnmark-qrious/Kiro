@@ -1,3 +1,8 @@
+---
+lastVerified:
+lastUsedInTask:
+---
+
 # Learning Synthesis
 
 Periodic task to turn accumulated Notion gotchas and discoveries into guide updates. Run manually via `/spawn` (CLI) or by asking any agent (IDE).

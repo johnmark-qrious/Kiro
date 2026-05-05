@@ -1,11 +1,18 @@
-# Util.showDialog Escape Key Binding is Broken in Modern Browsers
+---
+sync: draft
+notionPageId:
+lastLocalEdit:
+lastPublished:
+---
+
+# MVC jQuery / Util.js Gotchas
 
 ## Discovery
-Date: 2026-04-22
+Date: 2026-04-22 (updated)
 Repo: QT-Ubi-UbiquityBackend
-Feature: database-change-alert (PR3)
+Feature: database-change-alert (PR3, PR4)
 
-## Detail
+## Gotcha 1: Util.showDialog Escape Key Binding is Broken
 
 `Util.showDialog` in `mvc/mvc/Assets/Javascripts/Util.js` (~line 1533) binds the Escape key via `keypress`:
 
@@ -17,23 +24,30 @@ target.unbind("keypress").keypress(function (e) {
 });
 ```
 
-The `keypress` event does NOT fire for Escape in modern browsers - only `keydown` does. This means the built-in Escape-to-close behavior is broken for any dialog relying solely on `Util.showDialog`.
+The `keypress` event does NOT fire for Escape in modern browsers. Any new dialog that needs Escape-to-close MUST add its own `keydown` handler.
 
-## Impact
-
-- Any new dialog that needs Escape-to-close MUST add its own `keydown` handler
-- The design doc for database-change-alert assumes Escape handling is provided by existing `Util.showDialog()` - that assumption is wrong
-- Existing dialogs (delete_column_dialog, archive_column_dialog, etc.) likely also have broken Escape handling
-
-## Workaround
-
-Add a `keydown` handler alongside or instead of relying on `Util.showDialog`'s built-in binding:
+Workaround:
 
 ```javascript
-dialog.on('keydown.escapeClose', function(e) {
-    if (e.key === 'Escape') {
+dialog.off('keydown.escapeClose').on('keydown.escapeClose', function(e) {
+    if (e.key === 'Escape' || e.keyCode === 27) {
         Util.hideDialog(dialog);
-        // cleanup focus trap, re-enable buttons, etc.
     }
 });
 ```
+
+## Gotcha 2: <a> Buttons with "disabled" CSS Class Still Fire Clicks
+
+Save button and other action buttons are `<a>` tags, not `<button>`. Adding `addClass("disabled")` only changes appearance. Click events still fire.
+
+Workaround: Always add a guard as the first line of click handlers:
+
+```javascript
+if ($(this).hasClass("disabled")) return;
+```
+
+## Gotcha 3: XSS via String Concatenation into .html()
+
+Server-returned JSON values must never be concatenated into HTML strings and injected via `.html()`. The existing codebase uses `.text()` for user-supplied values.
+
+Workaround: Use DOM construction with `$("<element>").text(value)` and `document.createTextNode()`.

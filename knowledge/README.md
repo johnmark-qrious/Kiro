@@ -19,7 +19,11 @@ MANDATORY: Do NOT read all knowledge entries. Only scan this table of contents.
 - `backend-mvc-architecture.md` — Full MVC project architecture: controllers, infrastructure, routing, viewmodels, caching, auth, migration pattern | Tags: QT-Ubi-UbiquityBackend, mvc, architecture, legacy, strangler-fig
 - `ubiquity-backend-columninfo-no-ispk.md` — ColumnInfo has no IsPK property; key field detection only at DTE layer, MVC schema model update needed | Tags: QT-Ubi-UbiquityBackend, list, schema, columninfo, ispk
 - `notion-subpr-status-block-pattern.md` — Update existing Notion table blocks in place, don't append new ones during sub-PR status reconciliation | Tags: notion, worktree, sub-pr-status, gotcha
-- `ubiquity-dialog-escape-gotcha.md` — Util.showDialog binds Escape via keypress (broken in modern browsers); new dialogs need keydown handler | Tags: QT-Ubi-UbiquityBackend, mvc, util, dialog, escape, gotcha
+- `ubiquity-dialog-escape-gotcha.md` — MVC jQuery gotchas: Escape keypress broken, <a> disabled class not preventing clicks, XSS via .html() string concat | Tags: QT-Ubi-UbiquityBackend, mvc, util, dialog, escape, xss, jquery, gotcha
+- `ubiquity-backend-build-order.md` — Build order for u3.sln: service DLLs must build before mvc project | Tags: QT-Ubi-UbiquityBackend, build, mvc, dependencies
+- `ubiquity-backend-namespace-services-collision.md` — Services namespace collides with Services.cs ViewModel class, causes CS0118 | Tags: QT-Ubi-UbiquityBackend, namespace, csharp, gotcha
+- `ubiquity-backend-worktree-file-overlap.md` — Parallel worktrees creating the same file causes merge conflicts | Tags: worktree, git, merge-conflict, gotcha
+- `worktree-distribute-from-local.md` — Distribute changes from local/feature branch to individual PR branches using selective stash checkout | Tags: worktree, git, distribute, workflow
 
 ## File Naming
 

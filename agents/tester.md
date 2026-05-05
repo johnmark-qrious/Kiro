@@ -25,6 +25,17 @@ Reference these guides for detailed standards:
 - Avoid testing third-party libraries and presentational components
 - Adopt property-based testing for edge cases
 
+## Requirements-First Testing (mandatory)
+
+When requirements or acceptance criteria are available for the task:
+1. Write tests from the AC/requirements FIRST, before reading the implementation code
+2. Each acceptance criterion should map to at least one test
+3. Test what the code *should do* per the spec, not what it *currently does*
+4. Only read the implementation after tests are written — to verify test setup (imports, mocks, file paths)
+5. If the implementation doesn't pass a spec-based test, that's a bug in the code, not the test
+
+This ensures tests validate behavior against requirements, not against implementation details.
+
 ## Risk Justification Gate (mandatory)
 
 Before writing ANY test, state the risk it mitigates in a brief comment above the test:

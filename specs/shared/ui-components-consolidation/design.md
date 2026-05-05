@@ -1,3 +1,9 @@
+---
+status: draft
+approvedBy:
+approvedDate:
+---
+
 # Design Document: UI Components Consolidation
 
 ## Overview
@@ -9,4 +15,4 @@ The migration follows a phased approach:
 2. Migrate shadcn components (UI primitives)
 3. Migrate shared custom components (business logic components)
 4. Migrate provider components (AccountProvider, NavBar)
-5. Update import paths in consuming
+5. Update import paths in consuming

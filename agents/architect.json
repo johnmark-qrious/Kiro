@@ -2,8 +2,23 @@
   "name": "architect",
   "description": "Web application architect. Scalable frontend/backend design, API integration, system architecture for Next.js, React, gRPC.",
   "prompt": "file://./architect.md",
-  "tools": ["read", "write", "shell", "code", "grep", "glob", "web_fetch", "web_search"],
-  "allowedTools": ["read", "grep", "glob", "code"],
+  "tools": [
+    "read",
+    "write",
+    "shell",
+    "code",
+    "grep",
+    "glob",
+    "web_fetch",
+    "web_search",
+    "subagent"
+  ],
+  "allowedTools": [
+    "read",
+    "grep",
+    "glob",
+    "code"
+  ],
   "resources": [
     "skill://.kiro/guides/architect/architecture-diagrams.md",
     "skill://.kiro/guides/architect/api-design-patterns.md",

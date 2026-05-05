@@ -1,3 +1,9 @@
+---
+status: draft
+approvedBy:
+approvedDate:
+---
+
 # Implementation Plan: No-File Notification Schedule UI
 
 ## Overview

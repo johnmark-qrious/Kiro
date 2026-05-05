@@ -1,5 +1,7 @@
 ---
 inclusion: manual
+lastVerified:
+lastUsedInTask:
 ---
 
 # Proto/gRPC Schema Implementation
@@ -40,3 +42,6 @@ User: "Add an email field to the CreateConnector request"
    IF additive only + buf breaking passes → skip review
 3. IF UI needs updating → hand off to frontend implementation workflow
 ```
+
+## Learned Patterns
+<!-- cap: 10 | last-consolidated: never | pr-count-since: 0 -->

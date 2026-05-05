@@ -1,0 +1,3 @@
+Add this row to the scripts table in ~/.kiro/steering/scripts.md:
+
+| `knowledge sync local` | Run `~/.kiro/scripts/sync-knowledge-to-global.ps1 -WorkspacePath "<current-workspace-path>"` to copy all workspace `.kiro/knowledge/*.md` files to global `~/.kiro/knowledge/`. Skips README.md. Reports created/updated/unchanged counts. |

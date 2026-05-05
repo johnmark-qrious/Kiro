@@ -1,3 +1,9 @@
+---
+status: draft
+approvedBy:
+approvedDate:
+---
+
 # Design Document: No-File Notification Schedule UI
 
 ## Overview

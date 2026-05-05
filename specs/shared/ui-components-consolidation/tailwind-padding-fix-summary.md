@@ -1,3 +1,9 @@
+---
+status: draft
+approvedBy:
+approvedDate:
+---
+
 # Tailwind CSS v4 Padding Utilities Fix - Summary
 
 **Date**: 2026-02-18  

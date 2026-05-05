@@ -2,8 +2,15 @@
   "name": "tester",
   "description": "Quality Engineer focused on high-signal, high-impact tests. Risk-based testing, resilience, negative paths.",
   "prompt": "file://./tester.md",
-  "tools": ["read", "write", "shell"],
-  "allowedTools": ["read"],
+  "tools": [
+    "read",
+    "write",
+    "shell",
+    "subagent"
+  ],
+  "allowedTools": [
+    "read"
+  ],
   "resources": [
     "skill://.kiro/guides/tester/testing-philosophy.md",
     "skill://.kiro/guides/tester/test-patterns.md",

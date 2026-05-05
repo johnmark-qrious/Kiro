@@ -1,3 +1,9 @@
+---
+status: draft
+approvedBy:
+approvedDate:
+---
+
 # Design Document: Migrate Journey Builder to Intl.DateTimeFormat
 
 ## Overview

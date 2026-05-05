@@ -1,3 +1,9 @@
+---
+status: draft
+approvedBy:
+approvedDate:
+---
+
 # CSS Cleanup Report - UI Components Consolidation
 
 **Date**: 2026-02-17  

@@ -1,3 +1,8 @@
+---
+lastVerified:
+lastUsedInTask:
+---
+
 # Test Review Guidelines
 
 Focus on **high-impact, high-signal tests** that catch real bugs. Avoid recommending low-impact tests.

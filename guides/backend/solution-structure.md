@@ -1,5 +1,7 @@
 ---
 inclusion: manual
+lastVerified:
+lastUsedInTask:
 ---
 
 # Ubiquity Backend Solution Structure
@@ -86,6 +88,27 @@ Each service domain follows a consistent project structure:
 dotnet build u3.sln
 dotnet test u3.sln
 ```
+
+## MVC Project (Legacy .NET Framework)
+
+The `mvc/` folder is a separate legacy .NET Framework 4.8 project with its own conventions that differ from the .NET 8 solution.
+
+### File Placement Rules
+
+| Type | Location | Namespace | Example |
+|------|----------|-----------|---------|
+| Data/entity classes | `mvc/code/Info/{Domain}/` | `Ubiquity.uSuite3.Web.Info.{Domain}` | `Info/Connector/FieldUsageEntry.cs` |
+| Static utility/service classes | `mvc/code/Infrastructure/` | `Ubiquity.uSuite3.Web.Infrastructure` | `Infrastructure/ConnectorFieldUsageService.cs` |
+| Controllers | `mvc/code/Controllers/{Area}/` | `Ubiquity.uSuite3.Web.Controllers.{Area}` | `Controllers/Lists/SchemaController.cs` |
+| URL helpers | `mvc/code/Urls/` | `Ubiquity.uSuite3.Web` | `Urls/Lists.cs` |
+| Views/partials | `mvc/mvc/Views/{Area}/{Controller}/` |  | `Views/Lists/Schema/connector_warnings_dialog.ascx` |
+
+### MVC Don't Do This
+
+- **Don't create new top-level folders** like `Services/`, `Helpers/`, etc. Use the existing `Info/{Domain}/` and `Infrastructure/` structure.
+- **Don't use interfaces for single-implementation services.** The MVC project doesn't use DI. Make services static classes that read `Settings` directly.
+- **Don't pass config via constructors.** Use `Settings.PropertyName` directly inside the service. Follow the `HttpProxy.cs` pattern: `static class`, `Lazy<HttpClient>`, no constructor.
+- **Don't forget to update `code.csproj`.** This is a legacy `.csproj` with explicit `<Compile Include="..." />` entries — new files must be added manually.
 
 ## Navigation Tips
 

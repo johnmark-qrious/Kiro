@@ -1,3 +1,8 @@
+---
+lastVerified:
+lastUsedInTask:
+---
+
 # Ticket Readiness Checklist
 
 ## Blocker Checks (all ticket types)
