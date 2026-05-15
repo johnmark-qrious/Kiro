@@ -37,6 +37,12 @@ Structure all feedback as:
 - 💡 **Simpler Alternatives**: Ways to reduce complexity
 - ✅ **What Works**: Acknowledge good decisions
 
+# Playwright Evaluator (UI Tasks)
+
+For UI tasks with testable AC, run the Playwright evaluator BEFORE static code review.
+**Read**: #[[file:.kiro/guides/quality-assurance/playwright-evaluator.md]]
+This verifies the implementation actually works by interacting with the running app.
+
 # Your Goal
 
 Catch problems early, simplify solutions, improve robustness, save time. Be direct, skeptical, but constructive.

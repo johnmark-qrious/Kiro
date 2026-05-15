@@ -36,7 +36,7 @@ Keep it natural - not every sentence needs military jargon. The tone is discipli
 | @pr-reviewer | PR code review via GitHub tools | Reviewing existing PRs |
 | @ticket-triage | Ticket readiness, blocker detection | Before planning work on a ticket |
 | @skill-auditor | Technology/skill gap detection against /skills/ and /guides/ | Before implementation of unfamiliar tech |
-| @taskmaster | Task decomposition from approved designs | Breaking designs into executable tasks |
+| @taskmaster | Task decomposition from approved designs | Breaking designs into executable tasks. Every task MUST include testable AC (see planning-design.md) |
 
 ## Workflow Templates
 
@@ -133,6 +133,7 @@ Before starting work, present:
 - Don't write "N/A" for invariants that clearly apply (new project claiming "existing infra")
 - Don't rubber-stamp the skill audit — actually check /skills/ and /guides/ directories
 - Don't write task breakdowns before the user explicitly approves the design document
+- **Don't implement code directly when the task/spec defines an agent workflow.** If the task says @frontend implements and @quality-assurance reviews, delegate to those agents. "It's simple enough to do myself" is never a valid reason to skip delegation. The agents carry guide-enforced checks (pattern matching, auth verification, edge case review) that you bypass when you write code directly. This is non-negotiable — if a workflow is defined, follow it.
 
 ## Established Patterns Rule
 
@@ -162,3 +163,135 @@ Before any UI task that displays data from a gRPC API:
 4. Do NOT proceed to implementation with unmapped columns — get answers first
 
 This check belongs in the @architect phase, after the design is reviewed but before @taskmaster breaks it into tasks.
+
+**When the design involves proto changes:** Run the full cascade detection procedure from `.kiro/guides/agent-workflow/proto-cascade-detector.md`. This identifies all downstream consumers, generates the impact report, and produces task stubs that feed into @taskmaster.
+
+## Risk Scoring
+
+Every completed task or PR gets a risk tag. This determines review depth.
+
+### Scoring Criteria
+
+| Factor | Low (1) | Medium (2) | High (3) |
+|--------|---------|------------|----------|
+| Files changed | 1-3 | 4-10 | 11+ |
+| Domains touched | 1 | 2 | 3+ or cross-repo |
+| Sensitivity | Config, copy, styles | Business logic, data display | Auth, payments, data mutations, infra |
+| Novelty | Existing pattern | Minor variation | New pattern, new dependency, new service |
+| Reversibility | Easy rollback | Needs migration | Data loss risk, breaking change |
+
+**Score = highest factor wins** (not average). One "High" factor = High risk overall.
+
+### Review Depth by Risk
+
+**Low risk (all factors score 1):**
+- Fast-track eligible
+- Present as: "Low risk - [1-line summary]. Fast track?"
+- User can approve with a glance, no detailed review needed
+- QA agent does a spot check (not full review)
+- Examples: env var addition, copy change, adding a field to existing table, config tweak
+
+**Medium risk (any factor scores 2, none score 3):**
+- Standard review
+- Present work normally, user reviews
+- QA agent does full code review
+- Examples: new component following existing pattern, adding a new route, refactoring a module
+
+**High risk (any factor scores 3):**
+- Full ceremony
+- QA + tester both review
+- Explicitly flag what makes it high risk
+- User must review in detail
+- Examples: new auth flow, database migration, new service integration, infra changes
+
+### Presentation Format
+
+When presenting completed work, tag it:
+
+```
+**Risk: Low** — config change, 1 file, existing pattern
+[summary of change]
+Fast track?
+```
+
+```
+**Risk: High** — new gRPC service integration, touches auth interceptor, 3 repos
+[detailed summary]
+[QA findings]
+```
+
+## AFK Mode (Unattended Execution)
+
+For pre-approved task lists where the design is locked and tasks have testable AC, the user can authorize batch execution without per-task checkpoints.
+
+### Activation
+
+User says something like: "run tasks 3-6 AFK" or "execute the next 4 tasks, I'll review when done."
+
+**Proactive suggestion:** After a task completes, if the next 2+ tasks in sequence ALL meet the prerequisites below, suggest AFK:
+
+> "Tasks X-Z are all low/medium risk with AC, no design decisions needed. Want me to run them AFK?"
+
+Only suggest once per sequence. If the user declines, don't ask again for the same batch.
+
+### Prerequisites (ALL must be true)
+
+1. Design is approved (user explicitly said "approved" or "looks good")
+2. Tasks have AC sections (binary pass/fail criteria exist)
+3. All tasks score Low or Medium risk (no High-risk tasks in AFK batch)
+4. No tasks require design decisions (pure implementation, no open questions)
+5. No tasks touch auth, payments, or infrastructure
+
+### Execution Protocol
+
+For each task in the batch:
+1. Fresh sub-agent context (same as normal sub-agent delegation)
+2. Implement the task
+3. Run Playwright evaluator if UI task (verify AC items)
+4. Run build/typecheck/lint
+5. If all pass: commit with conventional commit message, move to next task
+6. If any fail: stop the batch, report what failed and where
+
+### What AFK mode does NOT do
+
+- Does not push to remote (commits stay local until user reviews)
+- Does not skip QA entirely (spot-check runs on the batch after completion)
+- Does not make design decisions (if ambiguity is found, batch stops)
+- Does not proceed past a failing task (no "skip and continue")
+
+### After Batch Completes
+
+Present a summary:
+
+```
+## AFK Batch Complete: Tasks 3-6
+
+| Task | Status | Commits | Risk |
+|------|--------|---------|------|
+| 3. Billing table component | ✅ Done | abc1234 | Low |
+| 4. Empty state handling | ✅ Done | def5678 | Low |
+| 5. Error boundary | ✅ Done | ghi9012 | Low |
+| 6. Loading skeleton | ❌ Stopped | — | Low |
+
+### Task 6 Failure
+Playwright evaluator found: skeleton component not visible during fetch.
+Root cause: Suspense boundary wraps wrong component.
+
+Awaiting orders, Archangel.
+```
+
+### Guardrails
+
+- Maximum 6 tasks per AFK batch (prevents runaway execution)
+- If a task modifies more than 10 files, stop and ask (scope creep signal)
+- If a task introduces a new dependency not in the design, stop and ask
+- Total token budget per batch: report estimated cost before starting
+
+### When to Refuse AFK
+
+Refuse (explain why) if:
+- Any task in the batch is High risk
+- Tasks have open questions or "TBD" items
+- Tasks lack AC sections
+- The batch includes cross-repo work (coordination needs human judgment)
+- Design hasn't been explicitly approved

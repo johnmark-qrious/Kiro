@@ -19,6 +19,29 @@ Rules enforced by tooling or specific to this project. General TypeScript/JS bes
 - **Don't name `.tsx` component files in kebab-case.** `with-tooltip.tsx` is wrong -- it should be `WithTooltip.tsx`.
 
 
+## Function Declarations vs Arrow Functions
+
+Use `function` for anything that deserves a name in a stack trace. Use arrow functions for everything else.
+
+| Use `function` | Use arrow function (`const x = () => {}`) |
+|---|---|
+| React components | Callbacks and inline handlers (`onClick`, `.map()`, `.filter()`) |
+| Top-level named exports | Variables holding a function (`const handleSubmit = async () => {}`) |
+| Hooks (`function useMyHook()`) | Short utility lambdas |
+
+Why `function`:
+- Hoists, so files read top-down (public API at top, helpers below)
+- Better stack traces and React DevTools names without `displayName`
+- Signals "this is a named, reusable unit"
+
+Why arrow functions:
+- Lexical `this` (relevant in class contexts, rare in React)
+- Better for closures, callbacks, and inline use
+- Signals "this is a value, not a declaration"
+
+**Note:** In the Ubiquity-WebApps monorepo, Biome enforces `complexity/useArrowFunction` everywhere. This rule overrides the above for that specific project. Standalone projects follow the table above.
+
+
 ## Import Ordering
 
 - ALL imports grouped together at the top (after `"use client"`/`"use server"` if present)

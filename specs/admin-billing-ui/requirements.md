@@ -39,11 +39,13 @@
 |---|------------|--------|------|
 | D1 | FrontendProxyUrls (5 envs) | Add `<item key="admin" value="..." />` to `settings.xml` in all environments. | `QT-Ubi-UbiquityBackend` (`release/1.178.0`) |
 | D2 | Seed $250 connector pricing | EF Core migration: insert charge + price row (retail=250). | `qt-ubi-platform-api` |
-| D3 | Proto package 3.6.0 | `@qriousnz/ubiquity-protos` must include `billing/v1` exports. | `ubiquity-protos` (already published) |
+| D3 | Proto package 3.8.0 (WebApps) | `@qriousnz/ubiquity-protos` must include `billing/v1` exports. | `ubiquity-protos` (already published) |
 | D4 | CI paths-filter | Add `admin:` block to `build.yml` detect-changes. | `Ubiquity-WebApps` |
 | D5 | Terraform deployment | `tf/admin/` with shared `fargate-web-service` module. Listener priority 210. | `Ubiquity-WebApps` |
 | D6 | Billing API deployed | Must be reachable at `platform-api.internal.ubiquity-{env}.co.nz:50051`. | `qt-ubi-platform-api` (already deployed) |
 | D7 | Billing SQS consumer | Connectors publish billing events to SQS. | `Ubiquity-Connectors-Prefect` (confirmed done) |
+| D8 | Proto package 3.8.0 (Platform API) | Bump `Ubiquity.Protos` from 3.7.0 → 3.8.0 in `Directory.Packages.props`. Without this, Billing API returns `[unimplemented]` for RPCs the admin app calls. **Needs PR.** | `ubiquity-platform-api` |
+| D9 | Proto package 3.8.0 (Backend) | Bump `Ubiquity.Protos` from 3.6.0 → 3.8.0 in `remotingbridge/core/remotingbridge.core.csproj` (and other projects referencing it). Without this, remotingbridge crashes on startup: `Could not load type 'MessageServiceBase'`. **Needs PR.** | `QT-Ubi-UbiquityBackend` |
 
 ### 1.4 settings.xml Exact Values
 

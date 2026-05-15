@@ -116,6 +116,10 @@ export default async function DashboardPage() {
 
 Always validate inputs, check authorization, and handle errors.
 
+**Auth is mandatory per-action.** Every `"use server"` action that accesses protected data must call `requireSessionInfoCached()` and verify permissions independently. Layout-level auth does NOT protect server actions — they are directly callable as RPC endpoints regardless of which page rendered them.
+
+**Pattern-first rule.** Before writing a new server action (or any new file), check how existing actions in the same app handle auth, error handling, and logging. Match the established pattern exactly — don't invent a new approach when one already exists in the codebase.
+
 ```typescript
 'use server';
 import { z } from 'zod';

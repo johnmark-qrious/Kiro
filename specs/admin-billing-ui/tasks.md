@@ -233,3 +233,61 @@
 - [ ] Environment files have correct GRPC_BASE_URL and BILLING_GRPC_URL per env
 - [ ] Listener rule priority = 210 (no conflict with database = 200)
 - [ ] Health check path = `/admin/health`
+
+---
+
+## Task 8: Platform API — Proto Version Bump
+
+**Agent:** B (@backend)
+**Phase:** 1 (parallel)
+**Blocked by:** Nothing
+**Repo:** `ubiquity-platform-api`
+**Estimate:** ~5 min
+
+### Files
+
+| File | Action |
+|------|--------|
+| `Directory.Packages.props` | Update (`Ubiquity.Protos` 3.7.0 → 3.8.0) |
+
+### Context
+
+The admin app (WebApps) uses `@qriousnz/ubiquity-protos` 3.8.0. The Billing API must use the same version to implement all RPCs the admin app calls. Without this, the Billing API returns gRPC status 12 (`UNIMPLEMENTED`) for RPCs that exist in 3.8.0 but not 3.7.0.
+
+### Acceptance
+
+- [ ] `Directory.Packages.props` has `Ubiquity.Protos` Version="3.8.0"
+- [ ] `dotnet restore` succeeds
+- [ ] `dotnet build` succeeds (no breaking changes from proto bump)
+- [ ] Billing API starts and serves all RPCs without `UNIMPLEMENTED` errors
+
+
+---
+
+## Task 9: Backend — Proto Version Bump
+
+**Agent:** A (@backend)
+**Phase:** 1 (parallel)
+**Blocked by:** Nothing
+**Repo:** `QT-Ubi-UbiquityBackend`
+**Branch:** `release/1.178.0`
+**Estimate:** ~15 min
+
+### Files
+
+| File | Action |
+|------|--------|
+| `remotingbridge/core/remotingbridge.core.csproj` | Update (`Ubiquity.Protos` 3.6.0 → 3.8.0) |
+| `mvc/code/code.csproj` | Update (HintPath from 3.6.0 → 3.8.0) |
+| `smta/emailrender/emailrender.csproj` | Update (HintPath from 3.6.0 → 3.8.0) |
+
+### Context
+
+The remotingbridge gRPC service crashes on startup with `Could not load type 'MessageServiceBase' from assembly 'Ubiquity.Protos'`. This type was added in protos 3.8.0 (PR #22: `feat(system): add MessageService proto for connector alert emails`). Without the remotingbridge running on port 50051, the Billing API cannot call SessionService/AccountService and the billing UI fails.
+
+### Acceptance
+
+- [ ] `Ubiquity.Protos` bumped to 3.8.0 in all referencing projects
+- [ ] Solution builds (`u3.sln`)
+- [ ] Remotingbridge starts successfully and listens on port 50051
+- [ ] No `TypeLoadException` errors in service logs

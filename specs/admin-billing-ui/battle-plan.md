@@ -17,36 +17,33 @@
 
 ## Branch Strategy
 
-| Repo | Source | Branch | Purpose |
-|------|--------|--------|---------|
-| `Ubiquity-WebApps` | `main` | `feature/admin-billing-ui` | Base branch — all sub-PRs merge here, then base → main |
-| `Ubiquity-WebApps` | base branch | `feature/admin-billing-ui-scaffold` | Task 1 + 7 (scaffold + CI/TF) |
-| `Ubiquity-WebApps` | base branch | `feature/admin-billing-ui-data` | Task 2 + 4 (data layer + CSV) |
-| `Ubiquity-WebApps` | base branch | `feature/admin-billing-ui-components` | Task 3 (UI components) |
-| `QT-Ubi-UbiquityBackend` | `release/1.178.0` | `feature/admin-proxy-config` | Task 5 |
-| `qt-ubi-platform-api` | `master` | `feature/connector-pricing-seed` | Task 6 |
+> **Updated 2026-05-14:** Reviewer directed all PRs to merge directly into main. No feature branch integration PR needed.
+
+| Repo | Source | Branch | Target | Status |
+|------|--------|--------|--------|--------|
+| `Ubiquity-WebApps` | `main` | `feature/admin-billing-ui-scaffold` | `main` | ✅ Merged (PR #190) |
+| `Ubiquity-WebApps` | `main` | `feature/admin-billing-ui-data` | `main` | ✅ Merged (PR #198) |
+| `Ubiquity-WebApps` | `main` | `feature/admin-billing-ui-components` | `main` | Not started |
+| `QT-Ubi-UbiquityBackend` | `release/1.178.0` | `feature/admin-proxy-config` | `main` | Unpushed |
+| `qt-ubi-platform-api` | `master` | `feature/connector-pricing-seed` | `master` | Uncommitted |
 
 ### Merge Order
 
-```
-feature/admin-billing-ui-scaffold  → feature/admin-billing-ui (PR3a)
-feature/admin-billing-ui-data      → feature/admin-billing-ui (PR3b, after PR3a merged)
-feature/admin-billing-ui-components→ feature/admin-billing-ui (PR3c, after PR3b merged)
-feature/admin-billing-ui           → main (final PR, after all sub-PRs merged)
-```
+Each PR merges directly into main. No integration PR needed.
 
 ---
 
 ## PR Strategy
 
-| PR | Repo | Branch → Target | Tasks | Size |
-|----|------|----------------|-------|------|
-| PR1 | `QT-Ubi-UbiquityBackend` | `feature/admin-proxy-config` → `release/1.178.0` | Task 5 | XS |
-| PR2 | `qt-ubi-platform-api` | `feature/connector-pricing-seed` → `master` | Task 6 | S |
-| PR3a | `Ubiquity-WebApps` | `feature/admin-billing-ui-scaffold` → `feature/admin-billing-ui` | Task 1 + 7 | M |
-| PR3b | `Ubiquity-WebApps` | `feature/admin-billing-ui-data` → `feature/admin-billing-ui` | Task 2 + 4 | M |
-| PR3c | `Ubiquity-WebApps` | `feature/admin-billing-ui-components` → `feature/admin-billing-ui` | Task 3 | L |
-| PR4 | `Ubiquity-WebApps` | `feature/admin-billing-ui` → `main` | Final integration | M |
+| PR | Repo | Branch → Target | Tasks | Status |
+|----|------|----------------|-------|--------|
+| #190 | `Ubiquity-WebApps` | `feature/admin-billing-ui-scaffold` → `main` | Task 1 | ✅ Merged |
+| #198 | `Ubiquity-WebApps` | `feature/admin-billing-ui-data` → `main` | Task 2 | ✅ Merged |
+| #199 | `Ubiquity-WebApps` | `fix/add-billing-grpc-url-test-env` → `main` | Task 7 (partial) | ✅ Merged |
+| TBD | `Ubiquity-WebApps` | `feature/admin-billing-ui-components` → `main` | Task 3 + 4 | Not started |
+| TBD | `Ubiquity-WebApps` | TBD → `main` | Task 7 (CI/pipeline) | Not started |
+| TBD | `QT-Ubi-UbiquityBackend` | `feature/admin-proxy-config` → `main` | Task 5 | Unpushed |
+| TBD | `qt-ubi-platform-api` | `feature/connector-pricing-seed` → `master` | Task 6 | Uncommitted |
 
 ---
 

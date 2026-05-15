@@ -139,6 +139,28 @@ Categories:
 
 This block is NOT optional after a correction. If you catch yourself responding without it, add it before continuing.
 
+**"None needed" is only valid when:** the mistake was a genuine one-off (typo, misread a variable name, transient confusion). If the same category of mistake has occurred before in any session, "None needed" is NOT valid — propose a guide update.
+
+## Rework-Triggered Guide Proposals (Mandatory)
+
+When ANY of these occur during a session, a guide-update proposal is MANDATORY at task/feature completion:
+
+| Trigger | Detection | What to Propose |
+|---------|-----------|-----------------|
+| QA flagged a 🚨 Critical Issue that required code change | QA output has Critical Issue + implementation was modified | "Don't do this" entry or missing pattern |
+| Playwright evaluator failed an AC item | Evaluator report has ❌ FAIL | Missing convention or incorrect assumption |
+| User corrected the same category twice | Two Correction Acknowledged blocks with same Category | Guide entry for that category |
+| Sub-agent was re-spawned for the same task | Task required a second implementation attempt | Missing context or wrong approach documented |
+| Build/typecheck failed after implementation | Non-zero exit before fix was applied | Missing convention or environment note |
+
+### Rules
+
+1. Track rework signals silently during the session (don't interrupt work)
+2. At feature/task completion, if rework count > 0, produce the proposal BEFORE closing out
+3. The proposal must reference the specific trigger ("QA found X" or "evaluator failed Y")
+4. One proposal per trigger — don't batch unrelated issues into one update
+5. If the same trigger type fires 2+ times across sessions, escalate from proposal to strong recommendation
+
 ## How to Propose
 
 1. Finish the current task first — never interrupt work to update guides

@@ -68,6 +68,50 @@ When user says anything like "we were just talking", "you forgot", "goldfish":
 
 Only save on meaningful moments, not every message. Target 3-5 saves per session.
 
+## Cost Tracking
+
+Track resource usage per feature/session. Report on request or at feature completion.
+
+### What to Track
+
+- **Sessions used**: how many chat sessions contributed to this feature
+- **Phases**: time/effort split (design vs implementation vs review vs rework)
+- **Rework rate**: how many tasks needed fixes after QA or evaluator feedback
+- **Sub-agents spawned**: count and purpose
+- **AFK batches**: tasks attempted vs completed
+
+### When to Report
+
+- At feature completion (before PR)
+- When user asks "how much did this cost?"
+- In AFK batch summaries (estimated cost before starting, actual after)
+
+### Report Format
+
+```
+## Cost Report: [Feature Name]
+
+| Metric | Value |
+|--------|-------|
+| Sessions | 3 |
+| Sub-agents spawned | 8 (2 architect, 3 frontend, 2 QA, 1 tester) |
+| Tasks completed | 7/7 |
+| Rework cycles | 2 (Task 3: QA found missing error state, Task 5: evaluator caught broken nav) |
+| Phase split | Design 20% / Implementation 55% / Review 15% / Rework 10% |
+| AFK batches | 1 (tasks 4-6, all passed) |
+
+### Observations
+- Task 3 rework was preventable: AC didn't specify error state (now fixed in AC rules)
+- Most time spent in implementation (expected for 7-task feature)
+```
+
+### What This Enables
+
+- Spot features that cost disproportionately (vague specs = expensive rework)
+- Compare AFK vs attended execution efficiency
+- Identify which phases eat the most budget
+- Justify harness improvements with data
+
 ## Storage
 
 `knowledge add` — vector-indexed (semantic search). Retrievable by topic, date, or any concept in the notes.

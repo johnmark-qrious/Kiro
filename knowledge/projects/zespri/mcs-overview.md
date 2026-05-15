@@ -1,11 +1,13 @@
 ---
 sync: draft
 notionPageId:
-lastLocalEdit: 2026-05-08T13:43:00+12:00
+lastLocalEdit: 2026-05-13T14:04:00+12:00
 lastPublished:
 ---
 
 # Zespri MCS — Overview & Architecture
+
+> **SUPERSEDED:** This file was sourced from Confluence (May 8 2026) before codebase access. The authoritative, code-verified architecture doc is now `mcs-architecture.md` in this same folder. This file is retained for infrastructure/DevOps details not visible in code (ADF, APIM, release history, team info).
 
 ## What Is MCS?
 

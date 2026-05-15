@@ -1,11 +1,13 @@
 ---
 sync: draft
 notionPageId:
-lastLocalEdit: 2026-05-08T13:46:00+12:00
+lastLocalEdit: 2026-05-13T14:04:00+12:00
 lastPublished:
 ---
 
 # Zespri MCS — Business Context & Purpose
+
+> **STATUS:** Confluence-sourced (May 8 2026). Business context remains valid - not contradicted by codebase. Technical details now in `mcs-architecture.md`.
 
 ## Why MCS Exists
 

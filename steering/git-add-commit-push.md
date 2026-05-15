@@ -44,6 +44,7 @@ repo's package manager install) before any git operations. Git hooks
   diagnose why (missing deps, wrong env, broken config) and fix the
   root cause. `--no-verify` masks real problems.
 - **Don't push multi-commit PRs when the base is a merge commit.** The commitlint CI uses a shallow clone (`fetch-depth: commits + 1`) that can't resolve the base SHA when it's a merge commit at the boundary. Squash to 1 commit on a fresh branch off the base. This is a known `unit-tests.yml` fragility  real fix is `fetch-depth: 0` but that needs a separate CI PR.
+- **Never push fixes to a branch that has an open PR under review.** If issues are found after a PR is created (CI failures, missing files, config fixes), create a new branch off the target base, fix it there, and open a separate PR. The original PR's scope is locked once it's in review. Piggybacking fixes onto it bypasses the review process for those fixes.
 
 ## No Dead Code, No Placeholders, No Temporary Content
 

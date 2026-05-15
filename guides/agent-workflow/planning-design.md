@@ -84,7 +84,57 @@ Only proceed past this step on ✅ or user-approved ⚠️.
    - If there are **Open Design Risks** from the debate, present them clearly so the user can make the call
 9. Iterate based on user feedback
 10. Only proceed to the next phase when the user approves
-11. **Task breakdown (delegate to @taskmaster)** — once the user approves the design, spawn @taskmaster to decompose the design into executable tasks (`tasks.md`). The architect does NOT do task breakdown directly.
+11. **Task breakdown (delegate to @taskmaster)** — once the user approves the design, spawn @taskmaster to decompose the design into executable tasks (`tasks.md`). The architect does NOT do task breakdown directly. Each task MUST include an `AC:` section (see Task AC Format below).
+
+## Task AC Format
+
+Every task in `tasks.md` must include testable acceptance criteria. These are the contract between the implementing agent and the reviewing agent.
+
+### Format
+
+```markdown
+## Task N: [Title]
+- Files: [file list]
+- Depends on: [dependencies]
+- [Implementation description]
+
+AC:
+- [ ] [Binary pass/fail statement]
+- [ ] [Binary pass/fail statement]
+- [ ] ...
+```
+
+### Rules
+
+1. Each AC is binary pass/fail. No subjective language ("looks good", "feels right", "works correctly")
+2. Reference specific identifiers: RPC names, proto fields, component names, route paths, error codes
+3. Minimum coverage per task: happy path + empty/zero state + error state
+4. 4-8 criteria per task. More than 8 = task is too large, split it
+5. AC is written by @taskmaster during breakdown, not by the implementing agent
+6. @quality-assurance reviews against AC items as a checklist
+7. @tester writes tests that map to AC items
+
+### Good AC examples
+
+```
+AC:
+- [ ] GET /admin/health returns 200 with { status: "ok" }
+- [ ] billingReportClient calls ListBillingLineItems with session-id header
+- [ ] Table renders one row per BillingLineItem in response
+- [ ] Empty state component shown when items array is empty
+- [ ] Error toast fires when RPC throws ConnectError
+- [ ] Loading skeleton visible while request is in-flight
+```
+
+### Bad AC examples (don't do this)
+
+```
+AC:
+- [ ] Page works correctly
+- [ ] Data loads properly
+- [ ] Errors are handled
+- [ ] UI looks good
+```
 
 ## Rules
 
