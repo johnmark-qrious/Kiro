@@ -1,0 +1,31 @@
+{
+  "$schema": "Eval set for skill testing. Copy this template when creating evals for a new skill.",
+  "skill_name": "",
+  "created": "",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Realistic user request that should trigger this skill",
+      "expected_output": "Description of what correct output looks like",
+      "assertions": [
+        {
+          "name": "assertion_name",
+          "description": "Human-readable description of what's being checked",
+          "type": "contains",
+          "value": "string that must appear in output"
+        }
+      ],
+      "files": []
+    }
+  ],
+  "trigger_evals": [
+    {
+      "query": "User request that SHOULD trigger this skill",
+      "should_trigger": true
+    },
+    {
+      "query": "User request that should NOT trigger this skill (near-miss)",
+      "should_trigger": false
+    }
+  ]
+}

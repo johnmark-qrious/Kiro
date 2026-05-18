@@ -1,0 +1,15 @@
+{
+  "enabled": true,
+  "name": "Signal Tripwire",
+  "description": "Blocks write, shell, and subagent actions when a critical signal exists in signal.json. Exit code 2 = blocked.",
+  "version": "1",
+  "when": {
+    "type": "preToolUse",
+    "toolTypes": ["write", "shell", "subagent"]
+  },
+  "then": {
+    "type": "runCommand",
+    "command": "pwsh -NoProfile -File \"$HOME\\.kiro\\scripts\\signal-check.ps1\"",
+    "timeout": 5000
+  }
+}

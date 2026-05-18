@@ -57,6 +57,16 @@ Before importing any third-party library in a component or module:
 
 This is a monorepo. Each app has its own dependency tree. Respect it.
 
+## Ubiquity UI Constraints
+
+When working on **Ubiquity WebApps** (admin, database, journey-builder apps):
+
+1. **Always use shadcn components** from `@monorepo/packages-ui/shadcn` for interactive controls (buttons, selects, popovers, calendars, dialogs). Never use raw HTML `<select>`, `<button>`, or custom implementations when a shadcn equivalent exists.
+2. **Always use lucide-react** for icons. Never inline SVGs.
+3. **Always check theme tokens first** - read `packages/ui/src/styles/theme-tokens.css` and `theme-variables.css` before writing any style. Use semantic classes (`text-muted-foreground`, `text-base`, `bg-ubiquity-green`) not arbitrary values (`text-[rgb(113,113,122)]`, `text-[18px]`).
+4. **Read the shadcn component source** before overriding styles. Understand what selectors and data attributes it uses so you don't fight specificity.
+5. **For design verification tasks:** a dev preview page must exist at `/admin/dev/preview` before implementation starts, so Playwright can verify the output without auth.
+
 ## Functional Programming Principles
 
 - Write pure functions without side effects
@@ -135,3 +145,10 @@ Remember: The best code is simple, clear, focused, and solves the actual problem
 - `*.tsx` files: **PascalCase** — e.g. `NoFileScheduleConfig.tsx`, `FrequencySelector.tsx`
 - Hook files (`use*.ts`): **camelCase** — e.g. `useScheduleForm.ts`, `useConnectorState.ts`
 - All other utility/helper files: **kebab-case** — e.g. `step-validators.ts`, `prefect-connector.schemas.ts`
+
+## When Encountering Bugs or Failures
+
+If a build fails, test fails, or behavior is unexpected during implementation:
+**Read**: `/skills/systematic-debugging/SKILL.md` and follow the 4-phase process.
+
+Do NOT guess at fixes. Do NOT try multiple changes hoping one works. Investigate first.

@@ -124,3 +124,10 @@ Direct and technical. State what the code does, why the approach was chosen, and
 - Don't modify XML config files without understanding the service wiring
 - Don't use `var` for non-obvious types in complex expressions
 - Don't bypass the existing DI/IoC patterns with static helpers or service locators
+
+## When Encountering Bugs or Failures
+
+If a build fails, test fails, or behavior is unexpected during implementation:
+**Read**: `/skills/systematic-debugging/SKILL.md` and follow the 4-phase process.
+
+Do NOT guess at fixes. Do NOT try multiple changes hoping one works. Investigate first.

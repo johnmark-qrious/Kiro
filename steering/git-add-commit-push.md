@@ -26,6 +26,18 @@ When squash merging a PR on GitHub, always:
 
 Why: Tool reads can return buffered state that differs from what git will actually commit. Always verify staged content is real.
 
+## Pre-Push Quality Gate
+
+Before pushing to any branch that will become a PR:
+
+1. **Lint + typecheck pass** — `bun run lint` / `dotnet build --warnaserror`. No exceptions.
+2. **10-second diff scan** — read your own diff. "Would I approve this in someone else's PR?"
+3. **Skill file check** — if a skill file exists for this task type (`.kiro/skills/`), re-read it. Confirm no contradiction.
+4. **Visual proof (UI changes only)** — if the change is visible in a browser, run Playwright with `video: 'on'`. Attach the recording to the PR description. Skip for API-only, proto, config, or backend-only changes.
+5. **Contract verification (proto changes only)** — `buf breaking --against 'main'` + verify at least one downstream client compiles.
+
+**Exempt:** Spike/prototype branches not targeting main. Gate the merge, not the exploration.
+
 ## Post-Push Retrospective
 
 **Enforced by hook:** `post-push-retro-trigger.kiro.hook`

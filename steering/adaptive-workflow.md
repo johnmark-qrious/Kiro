@@ -43,16 +43,27 @@ Keep it natural - not every sentence needs military jargon. The tone is discipli
 Proven patterns. Use as-is, combine, or compose something new. These are defaults, not mandates.
 
 ### Greenfield Design
-`brainstorm → stack proposal → @architect → @dark-architect (3 rounds) → @skill-auditor → user approval → @taskmaster → worktree eval`
+`brainstorm → stack proposal → @architect → @dark-architect (3 rounds) → @skill-auditor → user approval → @designer (branding-reference) → user approves look & feel → @taskmaster → worktree eval`
 Good for: New projects, unfamiliar domains, no existing codebase.
 
 ### Feature (Existing Stack)
 `@ticket-triage → @architect → @dark-architect (3 rounds) → @skill-auditor → user approval → @taskmaster → worktree eval`
 Good for: New features in established codebases with known tech.
 
+**Tiered planning (scale ceremony to scope):**
+
+| Scope | Pipeline | When |
+|-------|----------|------|
+| Small (1-3 files, existing pattern) | Skip architect + DA. Straight to implementation. | Adding a column, new route following existing pattern, config change |
+| Medium (4-10 files, minor variation) | @architect proposes ONE approach. No DA. User approves. | New component, new server action, refactoring a module |
+| Large (11+ files, new pattern, cross-repo) | Full pipeline above (architect → DA → skill-auditor) | New service integration, new gRPC contract, unfamiliar domain |
+
+The orchestrator proposes the tier. User can escalate ("grill this") or simplify ("just do it").
+
 ### Bug Fix
-`@backend or @frontend → @quality-assurance (spot check) → @github-agent`
+`@backend or @frontend (load systematic-debugging skill) → @quality-assurance (spot check) → @github-agent`
 Good for: Isolated defects, clear root cause, no design decisions.
+**Mandatory:** Implementation agent MUST read `/skills/systematic-debugging/SKILL.md` before proposing any fix.
 
 ### Refactor
 `@architect (scope only) → @taskmaster → implementation agents → @quality-assurance → @github-agent`
@@ -149,10 +160,49 @@ This applies especially to: worktree strategy, branch naming, PR splitting, QA g
 Before spawning any sub-agent:
 
 1. **Resolve physical paths first** — During recon (before any subagent work), discover the repo location and worktree path. Include the absolute path in every subagent prompt. Never assume agents can find it themselves.
-2. **Track completion state** — After any cancellation or interruption, check the worktree (`git status`, file existence) before re-deploying. Don't re-run completed stages.
-3. **Keep prompts lean** — Pass: location + task + constraints. Let agents read files themselves. Only inline file contents if already in your context.
-4. **Parallel by default** — QA and tester are independent. Always run them simultaneously after implementation completes. Don't sequence what can be parallelized.
-5. **One shot** — Get the subagent call right the first time. Discover unknowns (paths, branch state, existing files) before spawning, not after failure.
+2. **Check skill matrix** — Read `skill-matrix.md`, identify the active project, load any required skills for the agent being deployed. Include skill content in the subagent prompt.
+3. **Track completion state** — After any cancellation or interruption, check the worktree (`git status`, file existence) before re-deploying. Don't re-run completed stages.
+4. **Keep prompts lean** — Pass: location + task + constraints + required skills. Let agents read files themselves. Only inline file contents if already in your context.
+5. **Parallel by default** — QA and tester are independent. Always run them simultaneously after implementation completes. Don't sequence what can be parallelized.
+6. **One shot** — Get the subagent call right the first time. Discover unknowns (paths, branch state, existing files) before spawning, not after failure.
+7. **Explore before act** — Every implementation subagent must READ relevant existing files before WRITING new code. No agent writes blind. Include "read the existing files in the target directory first" in every implementation prompt.
+
+## Signal Tripwire
+
+Parallel agents can't communicate mid-flight. The signal tripwire is a one-way critical alert system.
+
+**Files:** `.kiro/signal.json` (the signal) + `.kiro/gated-actions.json` (which actions check it)
+
+**How it works:**
+1. Agent discovers something CRITICAL (contract break, API shape wrong, security issue)
+2. Agent writes to `signal.json`:
+   ```json
+   {
+     "status": "critical",
+     "reason": "API returns items under .data.items, not .items",
+     "remove-when": "All agents updated with correct contract",
+     "created": "ISO timestamp",
+     "author": "agent-frontend"
+   }
+   ```
+3. Other agents read `signal.json` BEFORE executing a gated action (write, shell, subagent)
+4. If signal has content (not `{}`) → HALT at safe point, write HALTED.md explaining why
+5. Human reviews and clears the signal (reset to `{}`)
+
+**Rules:**
+- Empty `{}` or missing file = all clear
+- Missing/unparseable `gated-actions.json` = fail-closed (check before ALL actions)
+- No polling, no background reads — only check at gate points
+- Signal older than 24h: warn once per session ("stale signal"), but still halt
+- HALT means: no mid-write files, all files parse, clean state, no child processes
+
+**When to write a signal (ONLY for):**
+- Contract/API shape different than assumed
+- Security issue in shared code
+- Dependency missing/broken that affects other agents
+- Schema/type mismatch invalidating parallel work
+
+**NOT for:** progress updates, style preferences, non-blocking findings.
 
 ## Proto-to-UI Mapping Check
 
@@ -169,129 +219,9 @@ This check belongs in the @architect phase, after the design is reviewed but bef
 ## Risk Scoring
 
 Every completed task or PR gets a risk tag. This determines review depth.
-
-### Scoring Criteria
-
-| Factor | Low (1) | Medium (2) | High (3) |
-|--------|---------|------------|----------|
-| Files changed | 1-3 | 4-10 | 11+ |
-| Domains touched | 1 | 2 | 3+ or cross-repo |
-| Sensitivity | Config, copy, styles | Business logic, data display | Auth, payments, data mutations, infra |
-| Novelty | Existing pattern | Minor variation | New pattern, new dependency, new service |
-| Reversibility | Easy rollback | Needs migration | Data loss risk, breaking change |
-
-**Score = highest factor wins** (not average). One "High" factor = High risk overall.
-
-### Review Depth by Risk
-
-**Low risk (all factors score 1):**
-- Fast-track eligible
-- Present as: "Low risk - [1-line summary]. Fast track?"
-- User can approve with a glance, no detailed review needed
-- QA agent does a spot check (not full review)
-- Examples: env var addition, copy change, adding a field to existing table, config tweak
-
-**Medium risk (any factor scores 2, none score 3):**
-- Standard review
-- Present work normally, user reviews
-- QA agent does full code review
-- Examples: new component following existing pattern, adding a new route, refactoring a module
-
-**High risk (any factor scores 3):**
-- Full ceremony
-- QA + tester both review
-- Explicitly flag what makes it high risk
-- User must review in detail
-- Examples: new auth flow, database migration, new service integration, infra changes
-
-### Presentation Format
-
-When presenting completed work, tag it:
-
-```
-**Risk: Low** — config change, 1 file, existing pattern
-[summary of change]
-Fast track?
-```
-
-```
-**Risk: High** — new gRPC service integration, touches auth interceptor, 3 repos
-[detailed summary]
-[QA findings]
-```
+**Read**: `.kiro/guides/workflow/risk-scoring.md` when scoring completed work.
 
 ## AFK Mode (Unattended Execution)
 
 For pre-approved task lists where the design is locked and tasks have testable AC, the user can authorize batch execution without per-task checkpoints.
-
-### Activation
-
-User says something like: "run tasks 3-6 AFK" or "execute the next 4 tasks, I'll review when done."
-
-**Proactive suggestion:** After a task completes, if the next 2+ tasks in sequence ALL meet the prerequisites below, suggest AFK:
-
-> "Tasks X-Z are all low/medium risk with AC, no design decisions needed. Want me to run them AFK?"
-
-Only suggest once per sequence. If the user declines, don't ask again for the same batch.
-
-### Prerequisites (ALL must be true)
-
-1. Design is approved (user explicitly said "approved" or "looks good")
-2. Tasks have AC sections (binary pass/fail criteria exist)
-3. All tasks score Low or Medium risk (no High-risk tasks in AFK batch)
-4. No tasks require design decisions (pure implementation, no open questions)
-5. No tasks touch auth, payments, or infrastructure
-
-### Execution Protocol
-
-For each task in the batch:
-1. Fresh sub-agent context (same as normal sub-agent delegation)
-2. Implement the task
-3. Run Playwright evaluator if UI task (verify AC items)
-4. Run build/typecheck/lint
-5. If all pass: commit with conventional commit message, move to next task
-6. If any fail: stop the batch, report what failed and where
-
-### What AFK mode does NOT do
-
-- Does not push to remote (commits stay local until user reviews)
-- Does not skip QA entirely (spot-check runs on the batch after completion)
-- Does not make design decisions (if ambiguity is found, batch stops)
-- Does not proceed past a failing task (no "skip and continue")
-
-### After Batch Completes
-
-Present a summary:
-
-```
-## AFK Batch Complete: Tasks 3-6
-
-| Task | Status | Commits | Risk |
-|------|--------|---------|------|
-| 3. Billing table component | ✅ Done | abc1234 | Low |
-| 4. Empty state handling | ✅ Done | def5678 | Low |
-| 5. Error boundary | ✅ Done | ghi9012 | Low |
-| 6. Loading skeleton | ❌ Stopped | — | Low |
-
-### Task 6 Failure
-Playwright evaluator found: skeleton component not visible during fetch.
-Root cause: Suspense boundary wraps wrong component.
-
-Awaiting orders, Archangel.
-```
-
-### Guardrails
-
-- Maximum 6 tasks per AFK batch (prevents runaway execution)
-- If a task modifies more than 10 files, stop and ask (scope creep signal)
-- If a task introduces a new dependency not in the design, stop and ask
-- Total token budget per batch: report estimated cost before starting
-
-### When to Refuse AFK
-
-Refuse (explain why) if:
-- Any task in the batch is High risk
-- Tasks have open questions or "TBD" items
-- Tasks lack AC sections
-- The batch includes cross-repo work (coordination needs human judgment)
-- Design hasn't been explicitly approved
+**Read**: `.kiro/guides/workflow/afk-mode.md` when user requests AFK execution.

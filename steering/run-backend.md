@@ -85,6 +85,9 @@ The `.env` file is gitignored - these are local-only values.
 ## Startup Sequence
 
 ```powershell
+# 0. Pre-flight check (recommended - catches version mismatches before they bite)
+& "$HOME\.kiro\scripts\proto-check.ps1"
+
 # 1. Strip env bloat (MUST be first, before ANY Start-Process or dotnet run)
 Remove-Item Env:\KIRO_FEED_JSON -ErrorAction SilentlyContinue
 
@@ -108,6 +111,10 @@ docker compose up -d
 
 # 7. Start Admin app (Next.js on :3300)
 Start-Process -FilePath "bun" -ArgumentList "run","--filter","@monorepo/apps-admin","dev" -WorkingDirectory "C:\Projects\GitHub\Ubiquity-WebApps" -WindowStyle Minimized
+
+# 8. Start Database app (Next.js on :3100) — this is the Connector management UI
+# Needed when testing billing (connectors generate billing subscriptions)
+Start-Process -FilePath "bun" -ArgumentList "run","--filter","@monorepo/apps-database","dev" -WorkingDirectory "C:\Projects\GitHub\Ubiquity-WebApps" -WindowStyle Minimized
 ```
 
 ## Verify

@@ -108,6 +108,7 @@ This is the stable architecture overview of the Ubiquity platform. It describes 
 - Frontend repos use Biome for linting/formatting, Bun as package manager
 - Backend uses .NET with XML-based configuration files
 - Connectors-Prefect uses Ruff for linting, uv for package management
+- **File downloads use streaming from backend** — when a gRPC service has a server-streaming RPC returning `bytes chunk`, pipe it via a Next.js Route Handler directly to the browser. No client-side CSV/file generation libraries. See `apps/admin/src/app/billing/download/route.ts` for the pattern.
 
 ## When Building Features
 

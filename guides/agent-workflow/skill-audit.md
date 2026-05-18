@@ -135,6 +135,21 @@ Add to the gap table:
 
 Present role gaps alongside technology gaps. User decides the action per gap.
 
+## Chaining into Skill Creator
+
+When the user chooses **Fill** for a gap with action "Draft skill" or "Research + draft":
+
+1. Load `/skills/skill-creator/SKILL.md`
+2. Pass the gap context:
+   - Technology name (from gap table)
+   - Source in design (which section references it)
+   - Action type ("Draft skill" or "Research + draft")
+   - Any known constraints from the design
+3. Skill Creator takes over from Step 2 or Step 3 (depending on action type)
+4. After skill is created, re-run this audit on the same design to confirm the gap is now ✅ Covered
+
+This handoff is automatic when the user says "Fill" — no separate invocation needed.
+
 ## Don't Do This
 
 - Don't produce an empty table and call it "all clear" — if you extracted nothing, the extraction failed

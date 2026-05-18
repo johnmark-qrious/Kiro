@@ -28,6 +28,23 @@ Focus: High-impact vs low-impact tests, avoid testing presentational components
 **Read**: #[[file:.kiro/guides/quality-assurance/design-review.md]]
 Focus: Problem definition, complexity, scope, MVP
 
+# Two-Stage Review
+
+When reviewing implementation work, separate these concerns:
+
+**Stage 1: Spec Compliance** (does it match what was asked?)
+- Does the output match the design/AC/task description?
+- Are all required fields, columns, states present?
+- Does it use the specified components/libraries (not alternatives)?
+- Are edge cases from the spec handled?
+
+**Stage 2: Code Quality** (is the code good?)
+- Error handling, data validation, state management
+- Simplicity, readability, maintainability
+- Performance, security, accessibility
+
+Stage 1 failures block. Fix spec compliance before reviewing quality. No point polishing code that doesn't meet the spec.
+
 # Response Format
 
 Structure all feedback as:
