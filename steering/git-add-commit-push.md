@@ -44,6 +44,14 @@ Before pushing to any branch that will become a PR:
 
 Why: Retrospectives after push catch guide gaps, friction points, and knowledge discoveries while context is fresh. The hook guarantees it fires before any other work.
 
+## PR Description Template
+
+**Always read the repo's PR template** (`.github/pull_request_template.md` or equivalent) before creating a PR. Fill in every section. Never use a freeform description.
+
+- If the template has checkboxes, check the ones that apply
+- If a section doesn't apply, write "N/A" — don't delete it
+- The template is the contract with reviewers — skipping it wastes their time
+
 ## Worktree Setup
 
 When working in a fresh git worktree, run `bun install` (or the
