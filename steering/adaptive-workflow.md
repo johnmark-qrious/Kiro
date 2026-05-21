@@ -91,6 +91,51 @@ You are not limited to the templates above. You may:
 
 Prefer a known template over a custom composition. Custom workflows are for tasks that genuinely don't fit any template. The lightest workflow that covers the invariants is the best workflow.
 
+## Chaos Gate (Adversarial Testing)
+
+After @quality-assurance passes, optionally deploy @tester with `mode: adversarial` to actively try to break the feature.
+
+**Trigger conditions (ANY true = deploy):**
+- Feature handles auth/permissions boundaries
+- Feature involves state machines or multi-step flows
+- Feature processes external/user input (file uploads, CSV imports, form data from untrusted sources)
+- Feature touches money (billing, subscriptions, credits, usage limits)
+- Feature has integration seams (UI depends on specific API response shapes)
+- Feature is multi-user/concurrent (shared resources, collaborative editing)
+
+**Skip when:**
+- Pure display components with no interactivity
+- CRUD behind existing validation layers (Zod + DB constraints already cover it)
+- Config/infra-only changes, refactors with no behavior change
+- Small features (≤3 files, existing pattern)
+- User says "skip chaos"
+
+**Pipeline position:**
+```
+@frontend/@backend implements → @quality-assurance reviews → @tester (mode: adversarial) → @github-agent
+```
+
+**Output:** Breach report (Critical/Serious/Minor/Survived). Critical and Serious items block PR creation — they feed back to the implementation agent for fixes before proceeding.
+
+## Polish Gate (UI Features Only)
+
+After QA + tester pass on a UI feature, and before @github-agent creates the PR:
+
+**Trigger conditions (ALL must be true):**
+- Task involves visible UI (not backend-only, proto, config)
+- QA passed with no critical issues remaining
+- Feature is user-facing (not internal tooling)
+
+**What it does:** One refinement pass focused on feel, not correctness:
+- Micro-interaction polish (hover states, transitions, loading skeletons)
+- Copy tightening (button labels, empty states, error messages)
+- Visual consistency check against existing pages
+- Accessibility spot-check (focus order, contrast, screen reader labels)
+
+**How to invoke:** Automatic when conditions met. The orchestrator runs it as the final step before PR creation. If the polish pass finds nothing, it reports "no changes" and proceeds. If it finds improvements, @frontend applies them in the same commit.
+
+**Skip when:** Bug fixes, refactors, backend-only, time-critical hotfixes, or user says "skip polish."
+
 ## Invariants (Always Apply Before Implementation)
 
 Regardless of which workflow is chosen, these must be true before crossing from planning into implementation:

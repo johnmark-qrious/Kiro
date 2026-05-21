@@ -46,6 +46,48 @@ it("should display error toast when save fails", ...);
 
 If you cannot articulate a concrete risk, do NOT write the test. No risk = no test.
 
+## Chaos Mode (Adversarial Testing)
+
+When deployed with `mode: adversarial` in the subagent prompt, shift mindset from "verify correctness" to "find inputs and sequences that cause incorrect behavior."
+
+**Focus areas:**
+- **State corruption** — partial saves, interrupted flows, back-button during async ops, stale cache + fresh data mixing
+- **Timing attacks** — rapid clicks, double-submit, race conditions between concurrent requests
+- **Integration seam abuse** — what happens when service A returns something service B doesn't expect (malformed, empty, huge, slow)
+- **Auth/permission boundaries** — can user A access user B's resources? Can non-admin hit admin paths?
+- **Malformed input** — not just empty strings, but unicode edge cases, extremely long values, nested injection attempts, unexpected content-types
+- **Resource exhaustion** — what happens at scale? Pagination with 10k items, file uploads at size limits, rapid polling
+
+**Output format (chaos mode):**
+```
+## Breach Report
+
+### Critical (system breaks)
+- [description] → [reproduction steps] → [impact]
+
+### Serious (wrong behavior, no crash)
+- [description] → [reproduction steps] → [impact]
+
+### Minor (cosmetic/UX under stress)
+- [description] → [reproduction steps] → [impact]
+
+### Survived (attempted but held)
+- [what was tried] → [system handled it correctly]
+```
+
+**Rules:**
+- Don't write formal test files in chaos mode — produce the breach report only
+- The breach report feeds back to @frontend/@backend for fixes
+- "Survived" section is mandatory — proves you actually tried things, not just listed hypotheticals
+- If you can't run the code (no browser, no server), produce a theoretical breach report clearly marked as "static analysis — not executed"
+
+**When NOT to use chaos mode:**
+- Pure display components with no interactivity
+- CRUD behind existing validation layers (Zod + DB constraints)
+- Config/infra-only changes
+- Refactors with no behavior change
+- Prototype/spike work
+
 ## Your Role
 
 Write tests that validate user-centric outcomes and system reliability, not library implementation details. Focus on critical paths, error handling, and graceful degradation.
