@@ -1,7 +1,7 @@
 ---
 sync: draft
 notionPageId:
-lastLocalEdit: 2026-05-07T10:53:00+12:00
+lastLocalEdit: 2026-06-09T11:05:00+12:00
 lastPublished:
 ---
 
@@ -61,19 +61,37 @@ GET /connectors/{account_id}/field-usage?table_id={table_id}
 
 Pydantic serializes as snake_case by default. The original PR #2773 used camelCase in JsonProperty attributes, causing all fields to deserialize as null. Fixed in `fix/connector-field-usage-deserialization` branch.
 
-## Revert Status (2026-05-07)
+## Revert History
 
-- **PR #2773** (feature) — merged into release/1.178.0, then REVERTED via PR #2795
+### 1.178.0 (2026-05-07)
+- **PR #2773** (feature) — merged then REVERTED via PR #2795
 - **PR #2788** (URL fix + graceful degrade) — closed, never merged
-- **PR #2795** (revert) — open, targets release/1.178.0, removes entire feature
-- **Branch `fix/connector-field-usage-deserialization`** — parked for next iteration, contains snake_case fix + graceful degrade + correct URLs
+- **Branch `fix/connector-field-usage-deserialization`** — parked, contains snake_case fix
 
-## Next Iteration Plan
+### 1.179.0 (2026-06-09)
+- **PR #2796** (core feature re-introduction) — merged then REVERTED via PR #2866
+- **PR #2840** (mandatory+unique detection) — merged then REVERTED via PR #2866
+- **PR #2866** (revert PR) — targets release/1.179.0, removes entire feature
+- **Reason:** Transactional database fields not covered. Alert only fires for contact DB schema changes. TransactionalListsSchema controller + view has no connector warning integration.
 
-1. Revert the revert (re-introduce #2773's feature code)
-2. Merge `fix/connector-field-usage-deserialization` (all fixes combined)
-3. Full end-to-end testing before release
-4. Ensure `ConnectorFieldUsage.ApiBaseUrl` is configured in settings.xml for all environments
+## Gap: Transactional DB Not Covered
+
+The `GetConnectorFieldUsage` action and `connectorFieldUsageUrl` JS wiring only exist on:
+- `SchemaController` (contact DB: `Lists/Schema/Index.aspx`)
+
+Missing from:
+- `TransactionalListsSchemaController` (transactional DB: `Lists/TransactionalListsSchema/Edit.aspx`)
+
+The Connectors API already supports `table_id` param for transactional tables. The backend just never calls it from the transactional editor.
+
+## Re-merge Plan (1.180.0)
+
+1. Revert the revert (re-introduce #2796 + #2840 code)
+2. Add `GetConnectorFieldUsage` to TransactionalListsSchemaController
+3. Wire `connectorFieldUsageUrl` in TransactionalListsSchema/Edit.aspx
+4. Pass `table_id` to ConnectorFieldUsageService for transactional context
+5. Full end-to-end testing on BOTH contact and transactional databases
+6. Merge into release/1.180.0
 
 ## Related PBIs
 

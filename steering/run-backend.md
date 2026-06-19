@@ -140,12 +140,32 @@ Note: The backend services (13 uqhost processes) take 2-3 minutes to fully start
 - Email: `t000000@spark.co.nz`
 - Password: `570RGan1cn3!`
 
-### Puppeteer Testing Limitations
+### MCP Browser Limitations
 
-- Puppeteer (MCP tool) CANNOT connect to `https://engage.local` due to self-signed cert and hostname resolution issues in the sandboxed browser
-- Puppeteer CAN connect to `http://engage.local:8080` but login fails because auth cookies are `Secure` (HTTPS-only)
-- For Puppeteer UI testing, use `http://localhost:3300` directly (bypasses auth, tests UI components only)
-- For full auth-aware testing, use a real browser manually
+- MCP Playwright CANNOT connect to `https://engage.local` (self-signed cert, sandboxed Chromium has no trust store)
+- MCP Playwright CAN connect to `http://engage.local:8080` but login fails (auth cookies are `Secure`/HTTPS-only)
+- For unauthenticated UI testing, use `http://localhost:3300` directly via MCP browser tools
+
+### Visual Proof via CDP (Full Auth, HTTPS)
+
+Connect Playwright to a real Chrome instance via Chrome DevTools Protocol. Bypasses both cert and auth issues.
+
+**One-time setup:**
+```powershell
+# Launch Chrome with debug port (session persists in profile)
+Start-Process chrome -ArgumentList "--remote-debugging-port=9222","--ignore-certificate-errors","--user-data-dir=C:\tmp\chrome-test-profile"
+# Login (first time only - session persists after this)
+node "$HOME\.kiro\scripts\cdp-login.mjs"
+```
+
+**Take screenshot of any page:**
+```powershell
+node "$HOME\.kiro\scripts\cdp-connect.mjs" "https://engage.local/admin/billing" "C:\Users\T828819\proof.png"
+```
+
+**Why this works:** `connectOverCDP` puppeteers the running Chrome instance (with its trust store + active session) instead of launching a fresh sandboxed browser.
+
+**Scripts:** `~/.kiro/scripts/cdp-connect.mjs` (navigate + screenshot), `~/.kiro/scripts/cdp-login.mjs` (full login flow)
 
 ## Don't Do This
 

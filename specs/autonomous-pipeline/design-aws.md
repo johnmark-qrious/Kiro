@@ -1,73 +1,47 @@
-# Autonomous Agentic Development Pipeline — AWS Variant
+# Autonomous Agentic Development Pipeline — AWS Infrastructure
 
-**Version:** 2.0
-**Date:** 2026-05-18
-**Status:** Proposal (Updated post-deathmatch)
-**Base Document:** autonomous-pipeline-design.md
+**Version:** 2.1
+**Date:** 2026-05-21
+**Status:** Proposal (Deathmatch-validated)
 
 ---
 
-## Implementation Decision Update
+## Overview
 
-After adversarial tournament, the recommended approach is **Hybrid B+ (GitHub Copilot native)**. This is largely **cloud-agnostic** because the core execution happens on GitHub, not in your cloud provider.
+This document describes the AWS infrastructure for the escape hatch: the full custom pipeline built on AWS if GitHub Copilot native (Hybrid B+) proves insufficient. The core pipeline design, safety model, team structure, rollout plan, and success metrics are defined in `design.md`.
 
-### What's Cloud-Agnostic (Works Regardless)
+**When to build this:** Only if Hybrid B+ fails on a measured task class (see design.md Section 3k Quality Ratchet for trigger criteria).
 
-- GitHub Copilot Coding Agent (runs on GitHub's infrastructure)
-- Agent Merge (native GitHub)
-- CodeRabbit (SaaS)
-- Branch protection / human merge gate (GitHub)
-- copilot-instructions.md (in repo)
+**Chat platform:** Microsoft Teams (via webhooks to AWS).
+**Ticket system:** Azure DevOps (no AWS dependency — ADO works fine with any backend).
 
-### What Needs a Cloud Provider (Minimal)
+---
 
-| Component | Azure Option | AWS Option |
+## Technology Stack
+
+| Component | AWS Service | Purpose |
 |---|---|---|
-| ADO → GitHub Issue sync | Power Automate | **Lambda + EventBridge** (or keep Power Automate - works fine from AWS) |
-| Playwright CI | GitHub Actions (cloud-agnostic) | GitHub Actions (same) |
-| Artifact storage (videos) | GitHub Artifacts (free) | GitHub Artifacts (same) |
-
-**Key insight:** With Hybrid B+, the cloud provider choice barely matters. GitHub handles the heavy lifting. You only need cloud for the ADO sync trigger (one function).
-
-### If You Need the Escape Hatch (Full Custom on AWS)
-
-The rest of this document describes the AWS-native full custom pipeline. Use this only if GitHub Copilot native proves insufficient.
-
----
-
-## What Changes (Azure → AWS) — Escape Hatch Only
-
-The pipeline design, safety model, team structure, rollout plan, risk register, and success metrics are **identical** to the Azure variant. Only the infrastructure components swap.
+| Event listeners / functions | **Lambda** | Webhook handlers, orchestration logic |
+| Workflow orchestration | **Step Functions** | State machine for task lifecycle (retry, timeout, routing) |
+| Sandbox compute | **E2B** (Phase 1) / **ECS Fargate** (Phase 2+) | Isolated agent execution |
+| Secrets management | **Secrets Manager** | LLM API keys, GitHub tokens |
+| Monitoring / alerts | **CloudWatch + EventBridge** | Pipeline health, error routing |
+| Queue (async tasks) | **SQS** | Task queuing between stages |
+| Audit log storage | **DynamoDB** | Immutable task history (1-year retention) |
+| Artifact storage (videos) | **S3** | Playwright video recordings |
+| API gateway | **API Gateway (HTTP API)** | Webhook endpoints (Teams, ADO, GitHub) |
+| Container registry | **ECR** | Sandbox base images |
+| Identity / approver auth | **Cognito** | Group-based approval enforcement |
 
 ---
 
-## Technology Mapping
-
-| Component | Azure Version | AWS Version | Notes |
-|---|---|---|---|
-| Event listeners / functions | Azure Functions | **AWS Lambda** | Same pattern: webhook → function → action |
-| Workflow orchestration | Power Automate | **AWS Step Functions** | More powerful (native state machines), slightly more setup |
-| Chat platform | Teams | **Teams** (unchanged) | Teams works with any backend via webhooks |
-| Ticket system | Azure DevOps | **Jira** (or keep ADO - works fine with AWS) | ADO has no AWS dependency. Keep it if you prefer. |
-| Identity / group auth | Azure AD groups | **IAM Identity Center** (SSO) or **Cognito** groups | For approver group enforcement |
-| Sandbox compute | Daytona | **E2B** or **ECS Fargate tasks** or **CodeBuild** | See comparison below |
-| Secrets management | Azure Key Vault | **AWS Secrets Manager** | Same pattern |
-| Monitoring / alerts | Azure Monitor | **CloudWatch + EventBridge** | EventBridge for event routing |
-| Queue (async tasks) | Azure Service Bus | **SQS** (or EventBridge pipes) | For task queuing between stages |
-| Audit log storage | Azure Table Storage | **DynamoDB** | Immutable append, cheap at scale |
-| Artifact storage (videos) | Azure Blob | **S3** | Playwright videos stored here |
-| API gateway | Azure API Management | **API Gateway** (HTTP API) | Webhook endpoints |
-| Container registry | Azure ACR | **ECR** | For sandbox base images |
-
----
-
-## AWS Architecture Diagram
+## Architecture
 
 ```
 Teams Webhook ──────────► API Gateway → Lambda (Ticket Agent)
                                 │
-                                ▼ creates ticket (Jira or ADO)
-Jira/ADO Webhook ───────► API Gateway → Lambda (Orchestrator)
+                                ▼ creates PBI in ADO
+ADO Webhook ────────────► API Gateway → Lambda (Orchestrator)
                                 │
                                 ├── Step Functions state machine
                                 │   ├── Classify complexity
@@ -94,20 +68,20 @@ GitHub Webhook (merged) ► Lambda (Skill Evolution) → updates skill files in 
 
 ---
 
-## Sandbox Options (AWS-Specific)
+## Sandbox Options
 
 | Option | Cold Start | Isolation | Cost | Best For |
 |---|---|---|---|---|
-| **ECS Fargate** | 30-60s | Container (VPC isolated) | ~$0.04/vCPU-min | Full control, existing AWS estate |
-| **E2B** | ~150ms | Firecracker microVM | ~$0.05/vCPU-hr | Strongest isolation, fastest |
-| **CodeBuild** | 30-90s | Container | ~$0.005/build-min | Cheapest, but less flexible |
+| **E2B** | ~150ms | Firecracker microVM | ~$0.05/vCPU-hr | Phase 1: strongest isolation, fastest, $200 free tier |
+| **ECS Fargate** | 30-60s | Container (VPC isolated) | ~$0.04/vCPU-min | Phase 2+: full control, VPC integration |
+| **CodeBuild** | 30-90s | Container | ~$0.005/build-min | Cheapest, less flexible |
 | **EC2 spot + custom AMI** | 60-120s | Full VM | ~$0.03/hr (spot) | Maximum customization |
 
-**Recommendation:** E2B for Phase 1 (fastest, simplest, $200 free). Migrate to ECS Fargate in Phase 2 if you need VPC integration or cost optimization at scale.
+**Recommendation:** E2B for Phase 1 (fastest, simplest, free tier). Migrate to ECS Fargate in Phase 2 if you need VPC integration or cost optimization at scale.
 
 ---
 
-## Network Isolation (AWS)
+## Network Isolation
 
 ```
 VPC Configuration:
@@ -120,11 +94,13 @@ VPC Configuration:
 └── No public IP assigned to task
 ```
 
-If using E2B (external): isolation is built-in (Firecracker microVM, no network by default). You configure allowed endpoints explicitly.
+If using E2B (external): isolation is built-in (Firecracker microVM, no network by default). Configure allowed endpoints explicitly.
 
 ---
 
-## Step Functions State Machine (Replaces Power Automate)
+## Step Functions State Machine
+
+Handles the full task lifecycle: classify → route → implement → review → fix loop → escalate.
 
 ```json
 {
@@ -194,15 +170,15 @@ If using E2B (external): isolation is built-in (Firecracker microVM, no network 
 }
 ```
 
-**Advantage over Power Automate:** Step Functions gives you built-in retry logic, timeouts, error handling, and visual execution history. More robust for this use case.
+Step Functions gives you: built-in retry logic, timeouts, error handling, visual execution history, and native ECS/Lambda integration.
 
 ---
 
-## AWS-Specific Reference Architecture
+## Reference Architecture
 
 AWS provides an open-source reference: [sample-autonomous-cloud-coding-agents](https://github.com/aws-samples/sample-autonomous-cloud-coding-agents)
 
-This gives you pre-built:
+Pre-built:
 - CDK stack (infrastructure as code)
 - Lambda orchestrator
 - AgentCore MicroVMs (isolated sandboxes)
@@ -211,36 +187,17 @@ This gives you pre-built:
 - CLI for manual task submission
 
 **What you'd add on top:**
-- Teams webhook adapter (Lambda that receives Teams events)
-- Jira/ADO integration (or keep their GitHub Issues integration)
-- Playwright video gate (custom quality hook)
+- Teams webhook adapter (Lambda receiving Teams events)
+- ADO integration (webhook on PBI status change)
+- Playwright video gate (custom quality hook in CI)
 - Skill evolution engine (Lambda triggered on PR merge)
-- Approval flow (Teams adaptive card → Lambda → verify group membership)
+- Approval flow (Teams adaptive card → Lambda → Cognito group check)
 
 ---
 
-## Cost Model (AWS, 15 Engineers)
-
-| Item | Calculation | Monthly Cost |
-|---|---|---|
-| Lambda (orchestrator + agents) | ~5000 invocations/mo × 10s avg × 512MB | $15 |
-| ECS Fargate (sandbox tasks) | 220 tasks × 20 min × 2 vCPU × $0.04/min | $352 |
-| LLM API (Claude via Anthropic) | Same as Azure variant | $690 |
-| S3 (video artifacts) | ~50GB/mo | $1.15 |
-| DynamoDB (audit + state) | On-demand, ~1M reads/writes | $5 |
-| Step Functions | ~1000 executions × 10 transitions | $0.25 |
-| API Gateway | ~5000 requests/mo | $5 |
-| CodeRabbit | 15 seats × $15 | $225 |
-| **Total operating** | | **~$1,295/month** |
-
-Slightly cheaper than Azure variant ($1,330) due to Lambda + Fargate pricing.
-
----
-
-## Approver Group Enforcement (AWS)
+## Approver Group Enforcement
 
 ```python
-# Lambda: verify approver is in authorized Cognito group
 import boto3
 
 cognito = boto3.client('cognito-idp')
@@ -256,7 +213,6 @@ def handler(event, context):
     risk_level = event['risk_level']
     required_group = APPROVER_GROUPS[risk_level]
     
-    # Check group membership
     groups = cognito.admin_list_groups_for_user(
         Username=user_id,
         UserPoolId=USER_POOL_ID
@@ -272,62 +228,47 @@ def handler(event, context):
 
 ---
 
-## What Stays Exactly The Same (Regardless of Cloud)
+## Cost Model (15 Engineers)
 
-- Pipeline flow (Teams → Ticket → Orchestrator → Engineer → Review → Human → Skill Evolution)
-- Safety model (two human gates, sandbox isolation, 2-retry cap)
-- Team structure (cells aligned to repos)
-- Rollout phases (1a → 1b → 2 → 3 with exit criteria)
-- Risk register (all 10 risks + mitigations)
-- Success metrics and KPIs
-- Decision log (all ADRs)
-- Skill evolution engine (same protocol)
-- Playwright video proof (same approach)
-- Human merge gate (GitHub branch protection - cloud-agnostic)
-
----
-
-## Decision: Azure vs AWS
-
-| Factor | Azure | AWS |
+| Item | Calculation | Monthly Cost |
 |---|---|---|
-| Teams integration | Native (Power Automate) | Webhook (slightly more work) |
-| Orchestration | Power Automate (simpler) | Step Functions (more powerful) |
-| Sandbox | Daytona (external) | E2B (external) or ECS Fargate (native) |
-| Reference architecture | None | aws-samples/sample-autonomous-cloud-coding-agents |
-| Cost | ~$1,330/mo | ~$1,295/mo |
-| If you already have | Azure estate + M365 | AWS estate |
-| Effort to build | 4-6 weeks | 4-6 weeks (3-4 if using reference arch) |
+| Lambda (orchestrator + agents) | ~5000 invocations/mo x 10s avg x 512MB | $15 |
+| ECS Fargate (sandbox tasks) | 29 tasks x 20 min x 2 vCPU x $0.04/min | $46 |
+| LLM API (Claude via Anthropic) | ~29 tasks x 250K tokens avg x $3/MTok | $90 |
+| S3 (video artifacts) | ~10GB/mo | $0.23 |
+| DynamoDB (audit + state) | On-demand, ~100K reads/writes | $1 |
+| Step Functions | ~200 executions x 10 transitions | $0.05 |
+| API Gateway | ~2000 requests/mo | $2 |
+| CodeRabbit | 15 seats x $15 | $225 |
+| Agent gardening (2-4 hrs/week x $90/hr) | Engineer time | $720-1,440 |
+| **Total operating** | | **~$1,100-1,820/month** |
 
-**Pick based on where your infrastructure already lives.** The pipeline doesn't care.
-
+> **Note:** Cost model uses realistic Phase 1-2 volume (~29 routine PBIs/month from sprint audit). At full custom steady state with active routing, volume and costs scale proportionally.
 
 ---
 
-## References (AWS-Specific + Shared)
+## Teams Integration (via Webhook)
 
-### AWS-Specific
+Teams connects to AWS via outgoing webhooks or Bot Framework:
+
+1. **Incoming:** Lambda sends Teams messages via webhook URL (notifications, adaptive cards)
+2. **Outgoing:** Teams bot posts to API Gateway endpoint (slash commands, approval reactions)
+
+No Power Automate needed. Direct webhook integration is simpler and has no M365 dependency beyond Teams itself.
+
+---
+
+## References
 
 | Reference | URL | Relevance |
 |---|---|---|
 | AWS Sample Autonomous Cloud Coding Agents | https://github.com/aws-samples/sample-autonomous-cloud-coding-agents | Pre-built reference architecture. CDK + Lambda + AgentCore. |
-| AWS DevOps Agent (incident response) | https://aws.amazon.com/blogs/devops/leverage-agentic-ai-autonomous-incident-response-with-aws-devops-agent/ | AWS-native autonomous agent for ops (future phase reference). |
-| Amazon Q Developer Agent | https://aws.amazon.com/blogs/devops/reinventing-the-amazon-q-developer-agent-for-software-development/ | AWS coding agent capabilities. Issue → PR in CodeCatalyst. |
-| Amazon Q Agentic Coding in IDE | https://aws.amazon.com/blogs/devops/amazon-q-developer-agentic-coding-experience/ | Agentic coding with file read/write, bash commands. |
-| Step Functions Best Practices | https://docs.aws.amazon.com/step-functions/latest/dg/sfn-best-practices.html | State machine patterns for orchestration. |
+| AWS DevOps Agent (incident response) | https://aws.amazon.com/blogs/devops/leverage-agentic-ai-autonomous-incident-response-with-aws-devops-agent/ | Autonomous agent for ops (future phase). |
+| Amazon Q Developer Agent | https://aws.amazon.com/blogs/devops/reinventing-the-amazon-q-developer-agent-for-software-development/ | AWS coding agent. Issue to PR in CodeCatalyst. |
+| Step Functions Best Practices | https://docs.aws.amazon.com/step-functions/latest/dg/sfn-best-practices.html | State machine patterns. |
 | ECS Fargate Task Networking | https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-networking.html | VPC isolation for sandbox containers. |
-
-### Shared (Same as Azure Variant)
-
-| Reference | URL | Relevance |
-|---|---|---|
-| Stripe Minions (1,300 PRs/week) | https://jangwook.net/en/blog/en/stripe-minions-autonomous-coding-agents-1300-prs/ | Production precedent. Blueprint architecture. |
-| Pilot (quantflow.studio) | https://pilot.quantflow.studio/ | Open-source ticket-to-PR. #1 Terminal-Bench. |
-| DORA Metrics + AI Impact | https://www.faros.ai/blog/key-takeaways-from-the-dora-report-2025 | Problem statement data. |
-| Multi-Agent Failure Rates | https://www.augmentcode.com/guides/why-multi-agent-llm-systems-fail-and-how-to-fix-them | 41-86% failure without coordination. |
-| Anthropic Dreaming | https://claude.com/blog/new-in-claude-managed-agents | Self-improving agents. 6x improvement at Harvey. |
 | E2B Sandbox | https://e2b.dev | Firecracker microVMs, 150ms cold starts. |
+| Stripe Minions (1,300 PRs/week) | https://jangwook.net/en/blog/en/stripe-minions-autonomous-coding-agents-1300-prs/ | Production precedent. |
+| Pilot (quantflow.studio) | https://pilot.quantflow.studio/ | Open-source ticket-to-PR. #1 Terminal-Bench. |
 | Playwright Video | https://playwright.dev/docs/videos | Native video recording for test evidence. |
-| Optimizing Software Factories | https://tomtunguz.com/optimizing-software-factories/ | AI/labor ratio analysis. |
-| Agent Fleet Concurrency | https://tianpan.co/blog/2026-04-22-agent-fleet-concurrency-coordination | Coordination patterns at scale. |
 | CodeRabbit | https://coderabbit.ai | AI code review bot. |

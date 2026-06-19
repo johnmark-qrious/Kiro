@@ -2,8 +2,8 @@
   "name": "quality-assurance",
   "description": "Critical code reviewer. Challenges assumptions, finds edge cases, advocates for simplicity. Use before or after coding.",
   "prompt": "file://./quality-assurance.md",
-  "tools": ["read", "write", "code", "grep", "glob"],
-  "allowedTools": ["read", "code", "grep", "glob"],
+  "tools": ["read", "write", "code", "grep", "glob", "shell"],
+  "allowedTools": ["read", "code", "grep", "glob", "shell"],
   "resources": [
     "file://.kiro/agents/shared/platform-map.md",
     "skill://.kiro/guides/quality-assurance/code-review.md",

@@ -30,7 +30,9 @@ These load based on situation, not project:
 | Skill | Trigger | Loaded By |
 |-------|---------|-----------|
 | `systematic-debugging` | Bug/failure encountered | @frontend, @backend (in agent prompt) |
+| `requirements-logic-audit` | Design phase, reviewing specs/ACs before task breakdown | @architect |
 | `skill-creator` | @skill-auditor flags gap with "Draft skill" | Orchestrator |
+| `to-prd` | Evaluating/contributing to an external open source project not authored by us | @architect (reverse-engineers the project into a PRD for understanding) |
 
 ## Adding a New Project
 

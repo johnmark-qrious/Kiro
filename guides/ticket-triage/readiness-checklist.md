@@ -45,6 +45,19 @@ lastUsedInTask:
 - [ ] Severity/priority clear
 - [ ] Screenshots or logs (if applicable)
 
+## Logical Consistency (all ticket types with AC)
+
+Check AC items against each other and against the described behavior:
+
+- [ ] No contradictions between AC items (e.g., "show toast on error" vs "redirect on error")
+- [ ] State transitions are complete (what triggers each state, what exits it)
+- [ ] Boundary conditions addressed (zero, one, exactly-at-threshold, over-threshold)
+- [ ] Cross-field/cross-AC dependencies are explicit (if A then B, but what about un-A?)
+- [ ] Implicit assumptions stated (auth required? specific role? feature flag? data pre-exists?)
+- [ ] Error paths don't conflict with happy paths (same trigger, different outcomes)
+
+**Flag as "Missing Information" if:** 2+ AC items could be interpreted as contradictory, OR a described workflow has an obvious unaddressed branch (e.g., "save" is defined but "cancel mid-save" is not).
+
 ## Codebase Readiness (optional, when relevant)
 
 - [ ] Target branch exists and is up to date

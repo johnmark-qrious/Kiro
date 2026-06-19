@@ -35,6 +35,17 @@ lastUsedInTask:
 - What if they refresh the page?
 - What if they use the back button?
 
+## Unhappy Path Feedback (Beyond AC)
+
+Even if the AC only describes the happy path, check that rejected user actions produce visible feedback:
+
+- If input is silently ignored (wrong file type, invalid format), does the user see WHY?
+- If a constraint exists (size limit, character restriction), is it communicated on violation?
+- If an action is disabled, can the user tell what would enable it?
+- If something fails validation, does the error appear near the thing they interacted with?
+
+**Rule:** Any code path that discards user input without feedback is a finding. The user should never wonder "did that work?" or "why didn't anything happen?"
+
 ## Scale & Performance
 - What happens with 100 items? 1,000? 10,000?
 - What if this runs on a slow device?

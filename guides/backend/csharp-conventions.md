@@ -108,6 +108,28 @@ var first = filtered.First();     // enumerates again
 
 ## Don't Do This
 
+- **Don't omit braces on control flow blocks** — always use braces for `if`, `else`, `foreach`, `for`, `while`, even single-line bodies. This is enforced in PR review.
+
+```csharp
+// ✅ Good
+if (isDeleted)
+{
+    changeType = ChangeTypes.Deletion;
+}
+
+foreach (var name in names)
+{
+    AddEntry(name);
+}
+
+// ❌ Bad
+if (isDeleted)
+    changeType = ChangeTypes.Deletion;
+
+foreach (var name in names)
+    AddEntry(name);
+```
+
 - **Don't use `Dto` suffix**  this codebase uses `Info` suffix for data transfer objects (e.g., `FieldUsageInfo`, `AccountInfo`, `SchemaInfo`). Never `FieldUsageDto`.
 - **Don't put multiple public classes in one file**  even if they're small/related. One class = one file. Private nested classes inside a parent class are the exception.
 

@@ -1,7 +1,7 @@
 ---
 sync: draft
 notionPageId:
-lastLocalEdit: 2026-05-08T13:57:00+12:00
+lastLocalEdit: 2026-05-27T11:14:00+12:00
 lastPublished:
 ---
 
@@ -73,6 +73,37 @@ lastPublished:
 - **Effort:** Low-Medium
 - **Quick win:** ✅
 
+## Deathmatch Survivors (May 2026)
+
+Ideas validated through adversarial review. Both carry mandatory gates before build.
+
+### 7. Pre-submission Export Readiness Checking (India)
+- **Problem:** India FTA removes 33% tariff, creating new export volume. India has specific DPPQS/FSSAI phytosanitary requirements. Compliance team may be bottlenecked preparing MPI submissions for a market they haven't served at scale.
+- **Solution:** Extend existing Traceability feature with configurable compliance checklists. Decision-support tool: "Does this consignment meet India requirements BEFORE we submit to MPI?" Spark owns platform, Zespri owns regulatory content (CMS pattern).
+- **Impact:** Reduces rework on MPI submissions, accelerates time-to-export for India market
+- **Effort:** Low (1 week add-on to Traceability feature, IF base feature is built)
+- **Gate:** Discovery sprint (2 weeks). Measure mean-time-from-harvest-to-MPI-submission. If <48hrs already, kill. If >1 week with compliance as bottleneck, build.
+- **Status:** AWAITING VALIDATION
+- **Source:** Corporate intel (CEO Jason Te Brake, NZ Herald May 2026) + deathmatch 2026-05-27
+
+### 8. Harvest Window Forecasting (Per-Block Clearance Prediction)
+- **Problem:** Nobody gives individual growers a per-block prediction of when their fruit will clear. Zespri ops/logistics need per-block harvest timing for packhouse scheduling, cool-store allocation, shipping slot planning.
+- **Solution:** Statistical curve-fitting model (logistic growth, quantile regression) on historical DM trajectories per block/variety/region. Predicts clearance date from partial-season readings. Runs as scheduled batch job inside MCS, updates as new readings arrive.
+- **Impact:** Transforms MCS from compliance/recording tool into predictive tool. Grower-facing visibility + ops-facing logistics planning.
+- **Effort:** Medium (statistical model, not ML platform. No GPU, no drift detection.)
+- **Gate:** Backtest on 2 seasons of historical DM data. Must achieve ±3 days accuracy at 10-day horizon per-block. 4-week timebox, ~$5K dead cost if fails.
+- **Status:** AWAITING VALIDATION
+- **Customer:** Zespri ops/logistics (primary), growers (secondary)
+- **Source:** Corporate intel (220.9M trays record harvest) + deathmatch 2026-05-27
+
+### Killed Ideas (May 2026 Deathmatch)
+
+| Idea | Verdict | Reason |
+|------|---------|--------|
+| International Grower Visibility | DEAD | Rejected Multi-Country scope in disguise. Data doesn't exist in MCS. Spark has no authority. |
+| Yield Forecasting (original) | DEAD | MCS has maturity data, not yield data. Wrong premise. Pivoted to Harvest Window above. |
+| ServiceNow Integration | DEAD | Already separate. Ugly incident tool. No value integrating into MCS. |
+
 ## Priority Matrix
 
 | # | Solution | Effort | Impact | Quick Win |
@@ -83,3 +114,5 @@ lastPublished:
 | 4 | Predictive Maturity | Medium | Very High (business transformation) | ❌ |
 | 5 | Intelligent Allocation | Medium | High (operational efficiency) | ❌ |
 | 6 | Calc Engine Rules | High | High (revenue optimization) | ❌ |
+| 7 | India Export Readiness | Low | Medium (new market enablement) | ⏳ Gate |
+| 8 | Harvest Window Forecasting | Medium | High (predictive differentiation) | ⏳ Gate |

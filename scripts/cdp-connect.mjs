@@ -1,6 +1,8 @@
-// Connect to Chrome via CDP, navigate to a URL, take a screenshot
+// Connect to Chrome via CDP, navigate, screenshot
 // Usage: node cdp-connect.mjs [url] [screenshot-path]
-import { chromium } from 'file:///C:/Users/T828819/AppData/Local/npm-cache/_npx/9833c18b2d85bc59/node_modules/playwright/index.mjs';
+import { createRequire } from 'node:module';
+const require = createRequire('C:/Users/T828819/AppData/Local/npm-cache/_npx/9833c18b2d85bc59/node_modules/playwright/package.json');
+const { chromium } = require('playwright-core');
 
 const url = process.argv[2] || 'https://engage.local';
 const screenshotPath = process.argv[3] || 'C:/Users/T828819/proof.png';
@@ -15,3 +17,4 @@ console.log(`Title: ${await page.title()}`);
 console.log(`URL: ${page.url()}`);
 await page.screenshot({ path: screenshotPath, fullPage: true });
 console.log(`Screenshot saved: ${screenshotPath}`);
+await browser.close();

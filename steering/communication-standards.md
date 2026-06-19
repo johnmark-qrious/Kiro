@@ -1,7 +1,5 @@
 ---
-inclusion: auto
-name: communication-standards
-description: Writing style, tone, Teams messages, PR descriptions, ADO comments. Use when writing any communication or documentation.
+inclusion: manual
 ---
 
 # Communication Standards

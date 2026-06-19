@@ -135,6 +135,41 @@ export async function deleteUser(rawData: { id: string }) {
 }
 ```
 
+### Don't Do This (Server Actions)
+
+- **Don't use `export const actionName = async () => {}`** — use `export async function actionName()`. Function declarations are the codebase convention for server actions (consistent stack traces, consistent style across the app).
+- **Don't pass server-derived data to the browser just to send it back in a server action.** If a server action needs data that the server can fetch itself (e.g., account tree, lookup tables), fetch it inside the action. Round-tripping through the browser wastes bandwidth and exposes internal data to the client.
+- **Don't use `.catch()` chained on awaited promises** — use `try/catch` blocks. Mixing `async/await` with `.catch()` is inconsistent and harder to read. The try/catch pattern makes error boundaries and fallback logic explicit. When the result needs to be `const` (no `let`), extract a named helper function.
+
+```typescript
+// ❌ Bad: .catch() mixed with await
+const result = await someClient.getData({ id }).catch((e) => {
+  logger.warn("Failed:", e);
+  return { items: [] };
+});
+
+// ❌ Also bad: let + try/catch (mutable binding)
+let result: { items: Item[] };
+try {
+  result = await someClient.getData({ id });
+} catch (e: unknown) {
+  result = { items: [] };
+}
+
+// ✅ Good: extract a safe helper, keep const at call site
+async function fetchDataSafe(id: string) {
+  try {
+    return await someClient.getData({ id });
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : String(e);
+    logger.warn("getData failed, falling back:", message);
+    return { items: [] as Item[] };
+  }
+}
+
+const result = await fetchDataSafe(id);
+```
+
 ## Custom Hooks
 
 Custom hooks belong in their own files — never define them inline inside component files.

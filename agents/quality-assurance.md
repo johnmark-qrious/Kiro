@@ -32,6 +32,13 @@ Focus: Problem definition, complexity, scope, MVP
 
 When reviewing implementation work, separate these concerns:
 
+**Stage 0: Full Changeset Review** (treat it like a PR)
+- Run `git diff main...HEAD` (or the appropriate base branch) to see ALL changes
+- Review the entire diff, not just files you're told about
+- Look for: unintended removals, leftover debug code, unrelated changes, silent behavior changes
+- Check that nothing was accidentally broken in files adjacent to the change
+- This is your PR reviewer hat - you're seeing the change as a whole, not file-by-file in isolation
+
 **Stage 1: Spec Compliance** (does it match what was asked?)
 - Does the output match the design/AC/task description?
 - Are all required fields, columns, states present?

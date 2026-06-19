@@ -78,6 +78,25 @@ ADO PBI tagged "agent" → Power Automate → GitHub Issue created
 
 If GitHub Copilot proves insufficient (quality ceiling, cross-repo needs, control requirements), the full custom pipeline (Section 3 - Appendix) is pre-designed and ready to build. Decision gate: only build custom if native fails on a specific, measured task class.
 
+### Escape Hatch Trigger Criteria (Multi-Agent Activation)
+
+Build the multi-agent custom pipeline when ANY of these conditions are met for 4+ consecutive weeks:
+
+| # | Trigger | What It Means | Which Agent It Unlocks |
+|---|---------|---------------|----------------------|
+| 1 | Completion rate plateaus <50% despite instruction tuning | Single agent can't handle the work even with good guidance | Full custom Engineer Agent (Pilot) |
+| 2 | >30% of failures are "wrong approach, right code" | Agent needs architectural direction before implementing | Architect Agent |
+| 3 | Medium-complexity tasks (4-10 files) consistently escalate to humans | Design decisions needed before coding | Architect Agent + Orchestrator |
+| 4 | Cross-repo tasks become >20% of eligible backlog | Single-agent can't coordinate across repos | Orchestrator + multi-repo coordination |
+| 5 | CodeRabbit misses patterns causing repeated rework | Need custom review with team-specific skill files | Custom Review Agent |
+
+**Rules:**
+- Must be sustained (4+ weeks), not a bad sprint
+- Must be measured (from Quality Ratchet data), not anecdotal
+- Build only the agent that addresses the specific failure mode, not the entire multi-agent stack
+- Timeline: 4-6 weeks from trigger to production (pre-designed, just needs building)
+- Can build incrementally: Architect Agent alone, or Orchestrator alone, or full stack
+
 ### Core Principles (Unchanged)
 
 1. **Two human gates only**: Tag PBI as eligible (intent) + approve merge (quality)
@@ -108,7 +127,7 @@ If GitHub Copilot proves insufficient (quality ceiling, cross-repo needs, contro
 - Playwright video added to CI
 - CodeRabbit configured
 - 2-3 engineers pilot
-- Exit: >60% tasks produce mergeable PRs
+- Exit: >60% tasks produce PRs merged by human reviewer with ≤5 minutes of manual edits
 
 **Phase 2 (Weeks 5-12): Expand**
 - Full team
@@ -340,28 +359,102 @@ Agent (sandbox) → Unix socket → LLM Proxy (host-side) → Anthropic API
 
 ---
 
-### 3g. Playwright Video Proof
+### 3g. Evidence Artifacts (Proof of Work)
 
-**Responsibility:** Record browser-based tests as video evidence that the feature works. Attached to PR for human reviewer.
+**Responsibility:** Provide type-matched proof that the agent's implementation works. Attached to PR for human reviewer. The reviewer should never need to run the code locally to verify.
 
-**How it works:**
-- Playwright config in sandbox includes: `video: 'on'`, `trace: 'on'`
-- Tests run against the dev server (started inside sandbox)
-- On pass: video files (.webm) saved to artifacts directory
-- On PR creation: videos uploaded as PR attachments or linked from artifact storage
+**Principle:** This is an accountability system, not a proof system. CI enforces structure and completeness. Humans judge correctness and adequacy.
 
-**Important distinction:**
-- The **gate** is test PASS/FAIL (binary, automated)
-- The **video** is evidence for the human reviewer (supplementary, not a gate)
-- If tests pass but video looks wrong → human catches at merge gate
+**Evidence by change type:**
 
-**Technology:** Playwright (built-in video recording, no additional tooling)
-**Justification:** Already in our test stack. Native video support. Trace viewer for debugging.
+| Change Type | Proof Method | Example |
+|---|---|---|
+| UI feature/bug | Playwright video | "Modal opens, shows price, user confirms" |
+| API/backend | Test output + response snapshot | "gRPC returns correct billing data" |
+| Config/infra | `terraform plan` output or diff | "Env var added to all environments" |
+| Refactor | Test suite passes + before/after diff | "Same tests pass, fewer lines" |
+| Proto change | `buf breaking` output + downstream compile | "No breaking changes, consumers build" |
+| Mixed | Multiple artifacts matching each change type | One per concern |
 
-**Configuration:**
-- `VIDEO_MODE`: "on" (always record) or "retain-on-failure" (save space)
-- `VIDEO_SIZE`: { width: 1280, height: 720 }
-- `TRACE_MODE`: "on" (full trace for debugging)
+**Artifact entry format (each evidence item):**
+
+| Field | Required | CI Validates |
+|---|---|---|
+| Category | Yes | Must match defined taxonomy |
+| Assertion | Yes | Must be falsifiable statement (CI checks shape) |
+| Artifact Link | Yes | Must be resolvable URL/path |
+| Rollback Reference | Yes | Must reference executable rollback |
+| Reviewer Sign-off | Yes | Must be different person than author |
+
+**Minimum evidence floor:**
+```
+minimum_artifacts = ceil(files_changed / 5)
+```
+CI blocks merge if artifact count is below floor. Tunable per-repo via `.evidence.yml`.
+
+**Gap coverage display (inverted signal):**
+
+The evidence summary surfaces uncovered areas FIRST:
+```
+## Evidence Gaps (2 uncovered)
+- ❌ No performance evidence for new query path
+- ❌ No rollback evidence for migration
+
+## Accepted Risks
+- ⚠️ Performance gap accepted by @senior-dev (reason: read-only, <100 rows)
+
+## Covered (4 artifacts)
+- ✅ Unit tests: [link]
+- ✅ Playwright video: [link]
+- ✅ Integration test: [link]
+- ✅ Rollback: revert commit [sha]
+```
+
+**Accepted risk protocol:**
+
+Any gap not covered by an artifact requires:
+1. Named reviewer (not the author) signs off
+2. Justification text explaining why it's acceptable
+3. Scope boundary (what's accepted, what's not)
+4. Auditable and queryable post-merge
+
+**CI enforcement:**
+
+| Check | Blocks Merge |
+|---|---|
+| Artifact count >= floor | Yes |
+| All links resolvable | Yes |
+| Assertion contains falsifiable claim | Yes |
+| Rollback reference format valid | Yes |
+| Author != Reviewer on sign-off | Yes |
+| All gaps have ACCEPTED_RISK or artifact | Yes |
+
+**What CI does NOT validate:**
+- Correctness of assertions (human judgment)
+- Sufficiency of evidence for the risk level (human judgment)
+- Whether the right categories were chosen (human judgment)
+
+**Configuration (`.evidence.yml`):**
+```yaml
+evidence:
+  floor_divisor: 5
+  categories:
+    - correctness
+    - performance
+    - security
+    - rollback
+    - observability
+  require_reviewer_sign_off: true
+  display_mode: gaps_first
+  accepted_risk_requires_justification: true
+```
+
+**Technology:** Playwright (video for UI), GitHub Actions artifacts (test output, plan output), PR template (structured evidence section).
+
+**Failure modes:**
+- Agent produces passing test that doesn't test the right thing → falsifiability gate + human reviews assertion text
+- Evidence looks good but implementation is architecturally wrong → caught by 20% deep-review sampling (Section 3k)
+- Evidence overhead slows pipeline → floor is tunable, start low and increase
 
 ---
 
@@ -467,7 +560,64 @@ Diff: +142 / -3 lines across 4 files
 
 ---
 
-### 3k. Skill Evolution Engine
+### 3k. Quality Ratchet
+
+**Responsibility:** Prevent quality degradation through four complementary measurement mechanisms. These form a unified system - each catches what the others miss.
+
+**Mechanism 1: Dry-Run Gate (Phase 2 Entry)**
+
+Before scaling beyond pilot, measure median review time across 10 consecutive agent PRs. If median exceeds 8 minutes, do not expand - fix AC quality or task selection first.
+
+- Measured during final week of Phase 1
+- Includes only PRs that were merged (not rejected/escalated)
+- Clock starts when reviewer opens PR, ends at merge or first comment
+- If gate fails: investigate whether the problem is PR size, AC clarity, or reviewer unfamiliarity
+
+**Mechanism 2: Rolling CI Pass Rate**
+
+Track last 5 agent PRs' first-attempt CI pass rate against a baseline established in Phase 1 pilot.
+
+| Threshold | Action |
+|---|---|
+| >60% | Healthy. No action. |
+| 40-60% | Warning. Review recent copilot-instructions.md changes. |
+| <40% | Auto-pause pipeline. Investigate model drift or instruction regression. |
+
+Detection window: hours (not days). Uses existing CI data - zero additional infrastructure.
+
+**Mechanism 3: 20% Random Deep-Review Sampling**
+
+Each week, a senior engineer deep-reviews ~20% of merged agent PRs (randomly selected) for architectural correctness - not functional correctness (CI handles that).
+
+- Selection: random, not cherry-picked. Defeats gaming.
+- Focus: wrong abstractions, unnecessary coupling, wrong data model, missed reuse opportunities
+- Time cost: ~2 hours/month (6 PRs at ~20 min each)
+- Pause trigger: 3+ consecutive findings of architectural drift → pause pipeline, update instructions
+- Feedback: findings immediately become skill file entries (bypasses 2-occurrence rule for architectural issues)
+
+**Mechanism 4: Tagger Accuracy Feedback Loop**
+
+When an agent PR is rejected not for quality but for scope (task was actually complex), tag it "complexity-surprise" in ADO.
+
+- Track rate monthly
+- Target: <15% complexity-surprise rate
+- If exceeded: tighten tagging guidelines, add examples of "looks simple but isn't" to team wiki
+- Feed back into sensitivity manifest (file patterns that correlate with surprises)
+
+**Why four mechanisms:**
+
+| Mechanism | Catches | Misses |
+|---|---|---|
+| Dry-run gate | Systemic review burden | Individual bad PRs |
+| Rolling CI pass rate | Model drift, instruction regression | Architecturally wrong but compiling code |
+| Deep-review sampling | Architectural drift, wrong abstractions | Only samples 20% |
+| Tagger feedback | Misclassified complexity | Correctly-classified tasks that still fail |
+
+Together they form a closed loop: no single failure mode can persist undetected for more than ~10 days.
+
+---
+
+### 3l. Skill Evolution Engine
 
 **Responsibility:** Agents improve over time by learning from task outcomes.
 
@@ -684,11 +834,12 @@ Each cell operates independently. Cross-cell coordination happens through typed 
 - Skill files seeded
 
 **Exit criteria (go/no-go for Phase 2):**
-- Agent task completion rate >60% (without human intervention)
+- Agent task completion rate >60% (PRs merged by human with ≤5 minutes of manual edits)
 - Average task time <2 hours (ticket to PR)
 - Human merge rejection rate <20%
 - No production incidents caused by agent code
 - Cost per task validated
+- Median agent PR review time ≤8 minutes (dry-run gate)
 
 **Success metrics:**
 - Task completion rate (target: >60%)
@@ -783,7 +934,9 @@ Each cell operates independently. Cross-cell coordination happens through typed 
 
 ### 7.4 ROI Calculation (Conservative)
 
-**Monthly value delivered:**
+> **Note:** The following ROI applies to the full custom pipeline at steady state (Phase 3), where active routing sends ALL eligible work to agents. For Hybrid B+ (Phase 1-2), realistic volume is ~29 routine PBIs/month based on Sprint 42-44 audit. At that volume: 29 × 60% = ~17 tasks automated × 2.5 hrs × $90/hr = $3,825/month value vs ~$1,300 cost = **2.9:1 return**. Still positive, just smaller scale.
+
+**Monthly value delivered (full custom, steady state):**
 - 220 tasks/mo × 60% completion rate = 132 tasks automated
 - 132 tasks × 2.5 hours average (human implementation time saved) = 330 hours
 - 330 hours × $90/hr = **$29,700/month saved**
@@ -848,6 +1001,9 @@ Even worst case is ROI-positive within 16 months.
 | Pipeline uptime | >99% | Health check pass rate |
 | Cost per automated task | <$5 | Total monthly cost / tasks completed |
 | Production incidents from agent code | 0 | Incident post-mortems traced to agent PRs |
+| Rolling 5-PR CI pass rate | >60% (pause at <40%) | First-attempt CI pass rate across last 5 agent PRs |
+| Architectural sampling pass rate | >80% | Deep-review findings / PRs sampled |
+| Tagger accuracy (complexity-surprise rate) | <15% | PRs rejected for scope / total agent PRs |
 
 ### Evaluation Cadence
 
@@ -955,6 +1111,223 @@ No. It changes what they do. Engineers shift from typing code to designing syste
 | Fix loop | The cycle where Review Agent requests changes and Engineer Agent applies them (max 2 cycles). |
 | Escalation | When an agent can't complete a task after retries, it hands off to a human with full context. |
 | Rollback trigger | Automated condition that pauses the pipeline when quality degrades (error rate, cost, rejection rate). |
+
+---
+
+## 15. Future Expansions (Raw — Not Yet Validated)
+
+> **Status:** Ideas only. None of these have been through adversarial review, cost analysis, or feasibility validation. They are raw ingredients for future vectorstorms/deathmatches when the core pipeline is proven.
+
+### Suggested Sequencing
+
+| Phase | Expansions | Prerequisite |
+|-------|-----------|--------------|
+| Phase 2 (with core) | Changelog Generator, Dependency Treadmill | Core pipeline shipping PRs |
+| Phase 3 (proven) | Proto Evolution, Backlog Grooming, Knowledge Distiller | >60% completion rate sustained |
+| Phase 4 (high trust) | Self-Healing, Service Ticket Automation, Test-Gap Detector, Drift Reconciler | Safety model validated over 3+ months |
+
+---
+
+### 15.1 Self-Healing Pipeline
+
+**Pitch:** Monitoring catches bugs → agent creates ticket (deduped) → agent fixes → human approves merge.
+
+**Trigger:** Error event via event bus (CloudWatch/EventBridge alarm, Sentry alert, application exception threshold).
+
+**Flow:**
+1. Event fires with error signature (stack trace hash, error code, affected service)
+2. Agent checks open issues for duplicate (hash match against existing PBI descriptions)
+3. If new: creates PBI with repro context, stack trace, affected file(s)
+4. PBI enters normal pipeline (agent implements fix → CI → human merge)
+5. On merge: notifies on-call that the fix shipped
+
+**Open questions:**
+- Dedup strategy: hash on what? Stack trace alone? Error message + file + line?
+- Threshold: how many occurrences before creating a ticket? (avoid noise from transient errors)
+- Scope: only bugs with clear stack traces, or also performance degradation?
+- Who approves: on-call engineer or PBI owner?
+
+**Benefits:** Ops, engineers (bugs fixed before standup).
+**Risk:** Moderate. Wrong fix could mask a deeper issue. Human gate mitigates.
+
+---
+
+### 15.2 Service Ticket Automation
+
+**Pitch:** Client-facing staff submit requests → agent structures into PBI → human approver gates → pipeline implements.
+
+**Trigger:** Support/client team submits request via Teams channel, form, or email.
+
+**Flow:**
+1. Client-facing person describes the request (natural language)
+2. Agent parses intent, drafts PBI with title, description, AC
+3. Posts to approver (tech lead or product owner) as Teams adaptive card
+4. Approver: thumbs up (enters pipeline), edit (refine AC), reject (not a dev task)
+5. Approved PBI tagged "agent-eligible" → normal pipeline flow
+
+**Open questions:**
+- Input channel: dedicated Teams channel? Microsoft Form? Email inbox?
+- Scope: only "change X to Y" requests, or also "build me a report"?
+- Who approves: product owner or tech lead? Different for different request types?
+- How to handle requests that need clarification (back-and-forth with requester)?
+
+**Benefits:** Client-facing teams (faster turnaround), engineers (fewer interruptions).
+**Risk:** Safe. Human approver gates everything. Worst case: bad PBI gets rejected.
+
+---
+
+### 15.3 Proto-Contract Evolution Agent
+
+**Pitch:** Proto schema changes auto-propagate to all consuming repos with draft PRs.
+
+**Trigger:** PR merged in `ubiquity-protos` that changes a `.proto` file.
+
+**Flow:**
+1. Proto PR merges → webhook fires
+2. Agent regenerates SDK packages (TypeScript, Python, .NET)
+3. For each downstream repo: creates branch, updates generated code, fixes any breaking changes
+4. Opens draft PRs in each consuming repo with linked proto PR as context
+5. CI runs on each downstream PR
+
+**Open questions:**
+- Breaking changes: can the agent fix consumers, or only flag them?
+- Ordering: does Backend PR need to merge before WebApps PR?
+- What if the fix requires design decisions (new field mapping)?
+
+**Benefits:** Engineers (no manual cascade, currently a multi-hour process).
+**Risk:** Moderate. Wrong consumer fix could break things. Draft PR + CI + human review mitigates.
+
+---
+
+### 15.4 Dependency Upgrade Treadmill
+
+**Pitch:** Continuously attempts dependency upgrades, batches passing ones for merge.
+
+**Trigger:** Weekly cron (or on-demand).
+
+**Flow:**
+1. Agent runs `bunx npm-check-updates` / `dotnet outdated` / `uv pip compile --upgrade`
+2. For each available upgrade: creates isolated branch, applies upgrade, runs full CI
+3. Groups all passing upgrades into a single batch PR
+4. Failing upgrades logged with error context for human triage
+
+**Open questions:**
+- Major vs minor vs patch: different strategies?
+- Security-only upgrades: fast-track (skip batch, immediate PR)?
+- How to handle upgrades that pass CI but change behavior subtly?
+
+**Benefits:** Ops/security (no stale deps, fewer CVEs).
+**Risk:** Safe. CI catches breaking upgrades. Only passing ones reach human review.
+
+---
+
+### 15.5 Test-Gap Detector & Generator
+
+**Pitch:** Identifies untested code paths from coverage reports, generates meaningful tests.
+
+**Trigger:** Coverage drops below threshold, or new code merged without corresponding tests.
+
+**Flow:**
+1. Agent reads coverage report (lcov/cobertura)
+2. Identifies high-risk gaps: recently changed files with low coverage, critical paths (auth, payments)
+3. Generates tests that exercise uncovered branches
+4. Opens PR with new tests + coverage delta
+
+**Open questions:**
+- Quality: can generated tests catch real bugs, or just inflate coverage numbers?
+- Scope: unit tests only, or also integration/e2e?
+- Priority: which gaps matter most? (risk-weighted, not just line count)
+
+**Benefits:** Engineers (coverage without the grind), product (fewer regressions).
+**Risk:** Moderate. Bad tests give false confidence. Human review + "tests must fail when code is broken" validation needed.
+
+---
+
+### 15.6 ADO Backlog Grooming Co-pilot
+
+**Pitch:** Overnight, agent pre-grooms PBIs with AC, estimates, and agent-eligibility recommendations.
+
+**Trigger:** PBI created without acceptance criteria, or PBI in "New" state for >24 hours.
+
+**Flow:**
+1. Agent reads PBI title + description
+2. Drafts: acceptance criteria, complexity estimate, suggested repo, "agent-eligible" recommendation (yes/no/maybe with reasoning)
+3. Updates PBI fields (draft state, not committed)
+4. Product owner reviews Monday morning (2 min per PBI instead of 30 min writing AC)
+
+**Open questions:**
+- How good is AC generation without domain context?
+- Should it read related PBIs/features for context?
+- What if the PBI is genuinely ambiguous (needs human conversation first)?
+
+**Benefits:** Product owners (less grooming time), pipeline (better AC = better agent output).
+**Risk:** Safe. Advisory only. Human reviews and edits before anything enters the pipeline.
+
+---
+
+### 15.7 PR Review Knowledge Distiller
+
+**Pitch:** Extracts recurring review patterns into living standards docs + linter rules. Team taste becomes automated enforcement.
+
+**Trigger:** PR merged with review comments (human or CodeRabbit).
+
+**Flow:**
+1. Agent reads all review comments from merged PRs (weekly batch)
+2. Clusters by theme (naming, error handling, component structure, etc.)
+3. Patterns appearing 3+ times → proposes: new Biome rule, copilot-instructions.md entry, or team standards doc update
+4. Presents proposals to tech lead for approval
+
+**Open questions:**
+- How to distinguish "reviewer preference" from "team standard"?
+- What about contradictory review comments from different reviewers?
+- Should it also detect when existing rules are never triggered (stale rules)?
+
+**Benefits:** Engineering culture (implicit knowledge becomes explicit), onboarding (new devs get codified standards).
+**Risk:** Safe. Proposals only. Human approves before any rule is added.
+
+---
+
+### 15.8 Changelog & Docs Generator
+
+**Pitch:** Synthesizes merged PRs + PBIs into release notes, doc updates, and Teams announcements.
+
+**Trigger:** Release branch cut, or on-demand.
+
+**Flow:**
+1. Agent reads all PRs merged since last release + linked PBIs
+2. Generates: customer-facing changelog (plain language), internal changelog (technical), Teams announcement
+3. Posts draft to product owner for review
+4. On approval: publishes to relevant channels
+
+**Open questions:**
+- Audience: separate changelogs for internal vs customer-facing?
+- Format: markdown? Confluence page? Teams message? All three?
+- What about changes that shouldn't be announced (internal refactors, security fixes)?
+
+**Benefits:** Product/customers (no one writes changelogs manually), marketing (always has release content).
+**Risk:** Safe. Draft → human approval → publish. No automation without review.
+
+---
+
+### 15.9 Live Environment Drift Reconciler
+
+**Pitch:** Detects infra drift from Terraform state, generates corrective PRs.
+
+**Trigger:** Scheduled `terraform plan` (daily) or CloudWatch alarm on unexpected resource state.
+
+**Flow:**
+1. Agent runs `terraform plan` against each environment
+2. If drift detected: generates PR with corrective Terraform changes
+3. Flags severity (cosmetic drift vs security-relevant drift vs outage-risk drift)
+4. High-severity: immediate Teams alert + PR. Low-severity: batched weekly.
+
+**Open questions:**
+- What if the drift is intentional (manual hotfix that hasn't been codified)?
+- Who approves: platform engineer or on-call?
+- Should it auto-apply for low-risk drift (e.g., tags), or always require human?
+
+**Benefits:** Ops/security (drift caught before it causes incidents).
+**Risk:** **Dangerous.** Wrong correction could take down infrastructure. Needs strongest human gate. Never auto-apply without explicit approval.
 
 ---
 

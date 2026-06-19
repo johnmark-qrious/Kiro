@@ -26,11 +26,18 @@ When squash merging a PR on GitHub, always:
 
 Why: Tool reads can return buffered state that differs from what git will actually commit. Always verify staged content is real.
 
+## Pre-Commit Verification
+
+**Enforced by hook:** `pre-commit-verify-staged.kiro.hook`
+
+Why: Tool reads can return buffered state that differs from what git will actually commit. Always verify staged content is real.
+
 ## Pre-Push Quality Gate
 
 Before pushing to any branch that will become a PR:
 
 1. **Lint + typecheck pass** — `bun run lint` / `dotnet build --warnaserror`. No exceptions.
+   - For Ubiquity-WebApps specifically: run `node_modules/.bun/node_modules/@biomejs/biome/bin/biome check <changed-files>` on every staged file BEFORE committing. The pre-commit hook segfaults on Windows, so this is manual. CI WILL catch it and fail the PR.
 2. **10-second diff scan** — read your own diff. "Would I approve this in someone else's PR?"
 3. **Skill file check** — if a skill file exists for this task type (`.kiro/skills/`), re-read it. Confirm no contradiction.
 4. **Visual proof (UI changes only)** — if the change is visible in a browser, run Playwright with `video: 'on'`. Attach the recording to the PR description. Skip for API-only, proto, config, or backend-only changes.
@@ -46,6 +53,8 @@ Why: Retrospectives after push catch guide gaps, friction points, and knowledge 
 
 ## PR Description Template
 
+**Always link the ADO work item to the PR** via `wit_add_artifact_link` immediately after PR creation. This is not optional. Every PR must be traceable to its PBI/Task.
+
 **Always read the repo's PR template** (`.github/pull_request_template.md` or equivalent) before creating a PR. Fill in every section. Never use a freeform description.
 
 - If the template has checkboxes, check the ones that apply
@@ -60,9 +69,12 @@ repo's package manager install) before any git operations. Git hooks
 
 ## Don't Do This
 
+- **Don't amend a pushed commit.** Even if the next change is "part of the same fix," make a new commit. The PR squash-merges anyway. Amending after push requires force push, which is destructive. "Keep it as one clean commit" is never a valid reason.
 - **Don't use `--no-verify` as a first resort.** *(Enforced by `block-no-verify.kiro.hook`)* If hooks fail,
   diagnose why (missing deps, wrong env, broken config) and fix the
   root cause. `--no-verify` masks real problems.
+- **Don't push without running biome check on changed files.** The pre-commit hook segfaults on Windows. Run `node_modules/.bun/node_modules/@biomejs/biome/bin/biome check <files>` manually before committing. Import ordering (`organizeImports`) is the #1 CI failure cause — biome enforces alphabetical import groups.
+- **Don't use `biome-ignore` comments.** Fix the code to satisfy the linter. If biome complains about exhaustive deps, include the dependency (Jotai dispatch, React dispatch, refs are all stable). If it complains about unused vars, remove them. The only valid exception is a confirmed false positive with a linked issue — and even then, ask first.
 - **Don't push multi-commit PRs when the base is a merge commit.** The commitlint CI uses a shallow clone (`fetch-depth: commits + 1`) that can't resolve the base SHA when it's a merge commit at the boundary. Squash to 1 commit on a fresh branch off the base. This is a known `unit-tests.yml` fragility  real fix is `fetch-depth: 0` but that needs a separate CI PR.
 - **Never push fixes to a branch that has an open PR under review.** If issues are found after a PR is created (CI failures, missing files, config fixes), create a new branch off the target base, fix it there, and open a separate PR. The original PR's scope is locked once it's in review. Piggybacking fixes onto it bypasses the review process for those fixes.
 

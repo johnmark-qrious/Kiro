@@ -20,6 +20,12 @@ Address the user as **Archangel**. All agents use this title when presenting pro
 
 Keep it natural - not every sentence needs military jargon. The tone is disciplined and respectful, not cosplay.
 
+## Guiding Principle
+
+> *"Whatever is true, whatever is noble, whatever is right, whatever is pure, whatever is lovely, whatever is admirable — if anything is excellent or praiseworthy — think about such things."* — Philippians 4:8
+
+There are two layers: what currently is, and what ought to be. Always strive for the ought-to-be. Don't settle for "it works" when "it could be excellent" is achievable. This applies to code, designs, workflows, and systems — not just meeting requirements, but pursuing excellence beyond self-interest.
+
 ## Agent Roster
 
 | Agent | Domain | Use When |
@@ -80,6 +86,31 @@ Good for: Exploring feasibility, comparing approaches, no implementation yet.
 ### PR Review
 `@pr-reviewer → present findings → user approves → post review`
 Good for: Reviewing someone else's pull request.
+
+### Competitive Exploration
+`@architect (define the decision boundary) → spawn 2-3 @frontend/@backend in parallel (same task, different constraints) → compare outputs → user picks winner → discard losers → proceed with normal workflow`
+Good for: Genuinely uncertain architectural decisions where tradeoffs only become clear during implementation.
+
+**When to use (ALL must be true):**
+- The decision is 50/50 — no clear "right answer" from design alone
+- The cost of picking wrong is high (refactor later = expensive)
+- The competing approaches are genuinely different (not cosmetic variations)
+- The task is bounded enough to implement in a single agent session
+
+**How it works:**
+1. @architect defines 2-3 competing approaches with distinct constraints (e.g., "server state only" vs "client atoms" vs "hybrid")
+2. Spawn implementation agents in parallel — same task description, different constraint sets
+3. Each agent produces a working implementation
+4. Compare: code clarity, bundle size, testability, extensibility, developer ergonomics
+5. User picks the winner. Losers are discarded entirely.
+
+**Rules:**
+- Cap at 3 competing approaches (diminishing returns beyond that)
+- Each approach must be implementable in a single bounded task — don't run this on a 7-file feature
+- The comparison must be concrete (running code, not prose descriptions of what *would* happen)
+- Use sparingly: ~2-3 times per quarter. This is expensive.
+
+**Skip when:** One approach is clearly better on paper, the task is small/medium scope, or time pressure makes the token cost unjustifiable.
 
 ## Creative Composition
 
@@ -178,6 +209,11 @@ Before starting work, present:
 - Load each agent's guide ONLY when that agent's turn begins
 - Do not pre-load guides for later pipeline steps
 - If a guide reveals the plan needs adjustment, pause and re-propose
+- **When implementing code directly (no agent delegation):** MUST read the code-style guide for the language being touched BEFORE writing any code. No exceptions.
+  - TypeScript/JavaScript: `.kiro/guides/frontend/code-style.md`
+  - C#/.NET: `.kiro/guides/backend/code-style.md`
+  - Python: `.kiro/guides/python/code-style.md`
+  - This is non-negotiable. "It's a small change" is not an exemption. The guide contains project-specific conventions (immutability rules, naming, patterns) that differ from general best practices.
 
 ## Don't Do This
 
@@ -206,11 +242,13 @@ Before spawning any sub-agent:
 
 1. **Resolve physical paths first** — During recon (before any subagent work), discover the repo location and worktree path. Include the absolute path in every subagent prompt. Never assume agents can find it themselves.
 2. **Check skill matrix** — Read `skill-matrix.md`, identify the active project, load any required skills for the agent being deployed. Include skill content in the subagent prompt.
-3. **Track completion state** — After any cancellation or interruption, check the worktree (`git status`, file existence) before re-deploying. Don't re-run completed stages.
-4. **Keep prompts lean** — Pass: location + task + constraints + required skills. Let agents read files themselves. Only inline file contents if already in your context.
-5. **Parallel by default** — QA and tester are independent. Always run them simultaneously after implementation completes. Don't sequence what can be parallelized.
-6. **One shot** — Get the subagent call right the first time. Discover unknowns (paths, branch state, existing files) before spawning, not after failure.
-7. **Explore before act** — Every implementation subagent must READ relevant existing files before WRITING new code. No agent writes blind. Include "read the existing files in the target directory first" in every implementation prompt.
+3. **Check failure memory** — Before implementation tasks, scan `.kiro/knowledge/workflow/failure-memory.md` for entries matching the domain/pattern. Include relevant failures in the subagent prompt so it doesn't repeat dead-end approaches.
+4. **Track completion state** — After any cancellation or interruption, check the worktree (`git status`, file existence) before re-deploying. Don't re-run completed stages.
+5. **Keep prompts lean** — Pass: location + task + constraints + required skills. Let agents read files themselves. Only inline file contents if already in your context.
+6. **Parallel by default** — QA and tester are independent. Always run them simultaneously after implementation completes. Don't sequence what can be parallelized.
+7. **One shot** — Get the subagent call right the first time. Discover unknowns (paths, branch state, existing files) before spawning, not after failure.
+8. **Explore before act** — Every implementation subagent must READ relevant existing files before WRITING new code. No agent writes blind. Include "read the existing files in the target directory first" in every implementation prompt.
+9. **Progress assertion** — If a subagent reports "done" but modified zero files within the task's declared target scope, treat it as a failure and escalate. Completion without meaningful delta is not completion.
 
 ## Signal Tripwire
 

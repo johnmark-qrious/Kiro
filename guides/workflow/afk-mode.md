@@ -34,6 +34,8 @@ For each task in the batch:
 5. If all pass: commit with conventional commit message, move to next task
 6. If any fail: stop the batch, report what failed and where
 
+**Context flush rule:** Each task in the batch is a clean slate. Do NOT carry assumptions, variable names, approach decisions, or "what worked for the previous task" into the next one. Re-read the task's AC fresh. If the previous task's approach seems relevant, verify it applies — don't assume.
+
 ## What AFK mode does NOT do
 
 - Does not push to remote (commits stay local until user reviews)

@@ -10,7 +10,7 @@ This approach is already proven at scale: Stripe ships 1,300+ pull requests per 
 
 **Expected outcome**: Same team of 10-20 engineers producing 3-5x the output, with engineers shifting from writing code to designing systems and reviewing agent work.
 
-**Cost**: ~$200/month (vs $1,300/month for full custom alternative)
+**Cost**: ~$945-1,665/month including agent gardening (vs $5,695/month for full custom alternative)
 **Time to production**: 1-2 weeks (vs 4-6 weeks for full custom)
 **Custom components to build**: 2 (vs 6 for full custom)
 
@@ -84,7 +84,8 @@ The bottleneck is validating and shipping code, not writing it.
 | GitHub Copilot (already subscribed) | $0 incremental |
 | Power Automate (ADO → GitHub sync) | Included in M365 |
 | CodeRabbit (optional, enhanced review) | $225 (15 seats × $15) |
-| **Total** | **~$200/month** |
+| Agent gardening (2-4 hrs/week × $90/hr) | $720-1,440 |
+| **Total** | **~$945-1,665/month** |
 
 ### Compared To
 - Full custom pipeline (Pilot + Daytona): $1,300/month + $114k setup
@@ -101,7 +102,7 @@ The bottleneck is validating and shipping code, not writing it.
 - Set up Power Automate: ADO PBI tagged "agent" → GitHub Issue
 - Add Playwright video recording to CI
 - 2-3 engineers pilot with routine tasks
-- **Exit criteria:** >60% of assigned tasks produce mergeable PRs
+- **Exit criteria:** >60% of assigned tasks produce PRs merged with ≤5 minutes of human edits; median review time ≤8 minutes
 
 ### Phase 2: Expand & Measure (Weeks 5-12)
 - Full team uses the pipeline for eligible tasks
