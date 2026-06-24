@@ -1,6 +1,6 @@
 ---
 sync: modified
-lastLocalEdit: 2026-06-18T15:53:00+12:00
+lastLocalEdit: 2026-06-23T10:38:00+12:00
 ---
 
 # Connector Email Notifications Architecture
@@ -114,3 +114,15 @@ When multiple files fail in one import run:
 - Same reason = one email listing all affected files (comma-separated)
 - Different reasons = separate emails
 - Brad Knewstubb confirmed: "Batched unless they fail for different reasons"
+
+
+### DON'T Do This (Connectors Return Types)
+- Don't return arbitrary tuples from methods (e.g. `return True, 5`). Use a `@dataclass` with named fields instead (`BatchImportResult(success=True, row_count=5)`). Tuples make code harder to work with — readers have to remember what index 0 vs 1 means. (Niklas Pechan, June 2026)
+
+### Stuck Files Are Not Successes
+- Files that imported into Ubiquity BUT couldn't be moved to archive (`is_stuck=True`) should NOT be included in success notifications. From the user's perspective, a stuck file is a mixed message — "it imported but something went wrong." Exclude `is_stuck` items from success emails. They'll get a separate permissions error email anyway. (Niklas Pechan, June 2026)
+
+### DON'T Do This (Connectors Method Design)
+- Don't unpack a dataclass into separate parameters when passing to another method. Pass the whole object. If you created `BatchImportResult` to replace a tuple, use it everywhere downstream — don't do `method(result.success, result.row_count)`, do `method(result)`. The point of a dataclass is that it travels as one unit. (Niklas Pechan, June 2026)
+- Don't add try/except around calls to methods that already handle their own errors. `_send_templated_email` catches `RpcError` and logs internally. Wrapping `send_success_email` (which delegates to `_send_templated_email`) in another try/except is redundant and violates single-responsibility. Check what the called function already does before adding defensive code. (Niklas Pechan, June 2026)
+- Don't add conditional logic that duplicates what the dataclass default already guarantees. If `BatchImportResult(success=False)` already sets `row_count=0` by default, don't write `result.row_count if result.success else 0` — just use `result.row_count`. Trust the data structure to be correct at construction time. Redundant guards add noise and imply the dataclass might be in an invalid state. (Niklas Pechan, June 2026)
